@@ -13,11 +13,9 @@ import ru.kpfu.itis.shkalin.spring_site_politics.model.Book;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.User;
 import ru.kpfu.itis.shkalin.spring_site_politics.repository.BookRepository;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
+import ru.kpfu.itis.shkalin.spring_site_politics.service.file_storage.StorageService;
 import ru.kpfu.itis.shkalin.spring_site_politics.util.ConverterUtil;
-import ru.kpfu.itis.shkalin.spring_site_politics.util.FileUploaderUtil;
-import ru.kpfu.itis.shkalin.spring_site_politics.util.PathRefactorerUtil;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -26,12 +24,14 @@ import java.util.Optional;
 @Service
 public class BookService {
 
-    @Value("${upload.realpath}")
-    private String uploadPath;
     @Value("${upload.url.suffix.books}")
     private String urlSuffixBooks;
+    @Value("${upload.url.suffix}")
+    private String urlSuffixMain;
     @Autowired
     BookRepository bookRepository;
+    @Autowired
+    StorageService storageService;
 
     public void showAll(CustomUserDetails userSess, ModelMap map) {
 
@@ -142,7 +142,8 @@ public class BookService {
 
         if (isAccess) {
             Book book = (Book) ConverterUtil.updateAndReturn(bookFormDto, new Book());
-            uploadBook(bookFile, book);
+            uploadBookFile(bookFile, book);
+            bookRepository.save(book);
 
         } else {
             throw new CustomAccessDeniedException("No rights to create the book.");
@@ -160,7 +161,8 @@ public class BookService {
 
             if (isAccess) {
                 Book book = (Book) ConverterUtil.updateAndReturn(bookFormDto, bookById);
-                uploadBook(bookFile, book);
+                uploadBookFile(bookFile, book);
+                bookRepository.save(book);
 
             } else {
                 throw new CustomAccessDeniedException("No rights to update the book.");
@@ -184,16 +186,12 @@ public class BookService {
         }
     }
 
-    private void uploadBook(MultipartFile bookFile, Book book) throws IOException {
-
+    private void uploadBookFile(MultipartFile bookFile, Book book) {
         if (bookFile != null && !bookFile.isEmpty()) {
-            String newUploadPath = uploadPath + PathRefactorerUtil.changeSeparator(urlSuffixBooks, "/", File.separator);
-            String mainFileName = book.getTitle();
-            String newFileName = FileUploaderUtil.uploadFile(bookFile, newUploadPath, mainFileName);
-            book.setFileUrl(urlSuffixBooks + "/" + newFileName);
+            String filename = book.getTitle();
+            String newFileName = storageService.saveResource(bookFile, "books", filename);
+            book.setFileUrl(urlSuffixMain + urlSuffixBooks + "/" + newFileName);
         }
-
-        bookRepository.save(book);
     }
 
 }

@@ -19,6 +19,16 @@ public class NotFoundException extends RuntimeException{
         this.entity = entity;
     }
 
+    public NotFoundException(String entity, String message) {
+        super(message);
+        this.entity = entity;
+    }
+
+    public NotFoundException(String entity, String message, Throwable cause) {
+        super(message, cause);
+        this.entity = entity;
+    }
+
     public String getEntity(){
         return entity;
     }

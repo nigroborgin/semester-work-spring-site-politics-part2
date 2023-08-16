@@ -1,8 +1,8 @@
 <#include "../base.ftlh">
-<#macro title>Not found ${(exception.entity)!''}</#macro>
+<#macro title>Not found ${entity!''}</#macro>
 
 <#macro content>
-    <h2>Not found ${(exception.entity)!''}</h2>
+    <h2>Not found ${entity!''}</h2>
     <#if message??>
         <strong>message:</strong> ${message}
         <br>

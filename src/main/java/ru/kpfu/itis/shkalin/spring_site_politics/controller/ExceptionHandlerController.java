@@ -25,6 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import ru.kpfu.itis.shkalin.spring_site_politics.exception.CustomAccessDeniedException;
 import ru.kpfu.itis.shkalin.spring_site_politics.exception.NotFoundException;
+import ru.kpfu.itis.shkalin.spring_site_politics.exception.StorageNotFoundException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -62,11 +63,17 @@ public class ExceptionHandlerController /*extends ResponseEntityExceptionHandler
 
     @Order(30)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(NotFoundException.class)
+    @ExceptionHandler({
+            NotFoundException.class,
+            StorageNotFoundException.class
+    })
     public ModelAndView notFound(HttpServletRequest req, Exception exception) {
 
         log(req, exception);
-        return getModelAndView(exception.getMessage(), req, "/errors/404_not_found");
+        ModelAndView mav = getModelAndView(exception.getMessage(), req, "/errors/404_not_found");
+        String entity = ((NotFoundException) exception).getEntity();
+        mav.addObject("entity", entity);
+        return mav;
     }
 
     @Order(35)

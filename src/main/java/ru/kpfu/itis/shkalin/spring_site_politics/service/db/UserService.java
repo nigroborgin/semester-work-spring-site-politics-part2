@@ -15,11 +15,9 @@ import ru.kpfu.itis.shkalin.spring_site_politics.model.User;
 import ru.kpfu.itis.shkalin.spring_site_politics.repository.RoleRepository;
 import ru.kpfu.itis.shkalin.spring_site_politics.repository.UserRepository;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
+import ru.kpfu.itis.shkalin.spring_site_politics.service.file_storage.StorageService;
 import ru.kpfu.itis.shkalin.spring_site_politics.util.ConverterUtil;
-import ru.kpfu.itis.shkalin.spring_site_politics.util.FileUploaderUtil;
-import ru.kpfu.itis.shkalin.spring_site_politics.util.PathRefactorerUtil;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -28,14 +26,16 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    @Value("${upload.realpath}")
-    private String uploadPath;
     @Value("${upload.url.suffix.picture}")
     private String urlSuffixPicture;
+    @Value("${upload.url.suffix}")
+    private String urlSuffixMain;
     @Autowired
     UserRepository userRepository;
     @Autowired
     private RoleRepository roleRepository;
+    @Autowired
+    StorageService storageService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -136,27 +136,28 @@ public class UserService {
                     }
                 }
 
-                if (picture != null && !picture.isEmpty()) {
-                    String newUploadPath = uploadPath + PathRefactorerUtil.changeSeparator(urlSuffixPicture, "/", File.separator);
-                    String mainFileName = id.get() + "_" + userById.getUsername();
-                    String newFileName = FileUploaderUtil.uploadFile(picture, newUploadPath, mainFileName);
-                    userById.setPictureUrl(urlSuffixPicture + "/" + newFileName);
-                }
-
+                uploadPicture(picture, userById);
                 userRepository.save(userById);
+
             } else {
                 throw new CustomAccessDeniedException("No rights to update the user.");
             }
         }
     }
 
-
-
     private UserViewDto getUserViewDto(User u) {
         UserViewDto userViewDto = new UserViewDto();
         ConverterUtil.update(u, userViewDto);
         userViewDto.setRoleName(u.getRole().getName());
         return userViewDto;
+    }
+
+    private void uploadPicture(MultipartFile picture, User userById) throws IOException {
+        if (picture != null && !picture.isEmpty()) {
+            String filename = userById.getId() + "_" + userById.getUsername();
+            String newFileName = storageService.saveResource(picture, "picture", filename);
+            userById.setPictureUrl(urlSuffixMain + urlSuffixPicture + "/" + newFileName);
+        }
     }
 
 }
