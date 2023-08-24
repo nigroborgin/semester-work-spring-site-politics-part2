@@ -1,19 +1,17 @@
 package ru.kpfu.itis.shkalin.spring_site_politics.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Entity
 @Table(name = "book")
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
-//@Builder
 public class Book {
 
     @Id
@@ -33,5 +31,17 @@ public class Book {
     @Column(name = "file_url")
     private String fileUrl;
 
+//    @ManyToMany(mappedBy = "books")
+//    private List<SelectionBook> selectionsOfBook;
+//
+//    public void addSelection(SelectionBook selection) {
+//        if (selectionsOfBook == null) {
+//            selectionsOfBook = new ArrayList<>();
+//        }
+//        if (!selectionsOfBook.contains(selection)) {
+//            selectionsOfBook.add(selection);
+//            selection.addBook(this);
+//        }
+//    }
 
 }

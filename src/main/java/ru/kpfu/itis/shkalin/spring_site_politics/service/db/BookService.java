@@ -35,13 +35,13 @@ public class BookService {
 
     public void showAll(CustomUserDetails userSess, ModelMap map) {
 
-        boolean showNew = false;
-        boolean showEdit = false;
-        boolean showDelete = false;
-
         List<BookViewDto> bookList = bookRepository.findAll().stream()
                 .map(b -> (BookViewDto) ConverterUtil.updateAndReturn(b, new BookViewDto()))
                 .toList();
+
+        boolean showNew = false;
+        boolean showEdit = false;
+        boolean showDelete = false;
 
         if (userSess != null) {
             User userFromSession = userSess.getUser();
@@ -114,7 +114,7 @@ public class BookService {
 
         if (id.isPresent()) {
             Book book = bookRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("post"));
+                    .orElseThrow(() -> new NotFoundException("book"));
 
             User userFromSession = userSess.getUser();
             boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");

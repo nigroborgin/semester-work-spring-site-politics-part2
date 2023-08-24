@@ -7,10 +7,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.post.PostFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
 import ru.kpfu.itis.shkalin.spring_site_politics.service.db.PostService;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Controller

@@ -68,7 +68,6 @@ public class BookController {
             @AuthenticationPrincipal CustomUserDetails userSess,
             @ModelAttribute("bookInfo") BookFormDto bookFormDto,
             @RequestParam("file") MultipartFile bookFile,
-            BindingResult result,
             ModelMap map) throws IOException {
 
         bookService.create(userSess, bookFormDto, bookFile);
@@ -81,9 +80,7 @@ public class BookController {
             @AuthenticationPrincipal CustomUserDetails userSess,
             @ModelAttribute("bookInfo") BookFormDto bookFormDto,
             @RequestParam("file") MultipartFile bookFile,
-            @PathVariable Optional<Integer> id,
-            BindingResult result,
-            ModelMap map) throws IOException {
+            @PathVariable Optional<Integer> id) throws IOException {
 
         bookService.update(userSess, bookFormDto, bookFile, id);
         return "redirect:/books";

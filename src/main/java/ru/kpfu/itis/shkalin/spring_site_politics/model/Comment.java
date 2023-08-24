@@ -1,19 +1,16 @@
 package ru.kpfu.itis.shkalin.spring_site_politics.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
+import javax.persistence.Entity;
 import java.time.LocalDateTime;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 //@Entity
 //@Table(name = "comment")
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
-//@Builder
 public class Comment {
 
 //    @Id

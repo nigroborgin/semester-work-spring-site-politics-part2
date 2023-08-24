@@ -1,5 +1,6 @@
 package ru.kpfu.itis.shkalin.spring_site_politics.controller;
 
+import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.ConversionNotSupportedException;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -29,6 +32,7 @@ import ru.kpfu.itis.shkalin.spring_site_politics.exception.StorageNotFoundExcept
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @ControllerAdvice
 public class ExceptionHandlerController /*extends ResponseEntityExceptionHandler*/ {
@@ -97,6 +101,30 @@ public class ExceptionHandlerController /*extends ResponseEntityExceptionHandler
         return getModelAndView("You are trying to do something wrong.", req, "/errors/405_method_not_allowed");
     }
 
+//    @Order(44)
+//    @ExceptionHandler(MultipartException.class)
+//    @ResponseStatus(value = HttpStatus.PAYLOAD_TOO_LARGE)
+//    public ModelAndView handleMultipartException(HttpServletRequest req, Exception exception){
+//
+//        log(req, exception);
+//        return getModelAndView("File size is too large.", req, "/errors/413_payload_too_large.ftlh");
+//    }
+
+    @Order(45)
+    @ResponseStatus(value = HttpStatus.PAYLOAD_TOO_LARGE)
+    @ExceptionHandler({
+            MaxUploadSizeExceededException.class,
+            SizeLimitExceededException.class
+    })
+    public ModelAndView handleMaxSizeException(
+            Exception exception,
+            HttpServletRequest req) {
+
+        log(req, exception);
+        return getModelAndView("File size is too large.", req, "/errors/413_payload_too_large");
+    }
+
+
     @Order(50)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler({
@@ -117,7 +145,7 @@ public class ExceptionHandlerController /*extends ResponseEntityExceptionHandler
     }
 
     private void log(HttpServletRequest req, Exception e) {
-        LOGGER.warn("URL: " + req.getRequestURL() + "; Message: " + e.getMessage(), e);
+        LOGGER.error("URL: " + req.getRequestURL() + "; Message: " + e.getMessage(), e);
     }
 
     private ModelAndView getModelAndView(String message, HttpServletRequest req, String viewName) {

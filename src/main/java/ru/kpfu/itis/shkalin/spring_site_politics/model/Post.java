@@ -5,14 +5,12 @@ import lombok.*;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "post")
-@Getter
-@Setter
-@ToString
-@Builder
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
+@Entity
+@Table(name = "post")
 public class Post {
 
     @Id

@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="/static/style/bootstrap.min.css">
-    <link rel="script" href="/static/js/bootstrap.min.js">
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+<#--    <link rel="script" href="/static/js/bootstrap.bundle.min.js">-->
     <title><@title></@title></title>
 </head>
 
@@ -34,6 +35,20 @@
                 <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
                 <li class="nav-item"><a class="nav-link" href="/posts">Posts</a></li>
                 <li class="nav-item"><a class="nav-link" href="/books">Books</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Selections
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="dropdown-item"><a href="/selections-books">Book selections</a></li>
+                        <li class="dropdown-item"><a href="/selections-posts">Post selections</a></li>
+                        <#if auth>
+                        <li><hr class="dropdown-divider"></li>
+                        <li class="dropdown-item"><a href="/selections-books/my">My book selections</a></li>
+                        <li class="dropdown-item"><a href="/selections-posts/my">My post selections</a></li>
+                        </#if>
+                    </ul>
+                </li>
             </ul>
             <#if auth>
                 <div class="navbar-text"><strong>USER: ${user.username}</strong></div>
@@ -60,12 +75,6 @@
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"
-        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"
-        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
         crossorigin="anonymous"></script>
 </body>
 

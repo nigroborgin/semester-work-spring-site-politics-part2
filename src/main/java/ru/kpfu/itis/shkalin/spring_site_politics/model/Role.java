@@ -4,14 +4,12 @@ import lombok.*;
 
 import javax.persistence.*;
 
-@Entity
-@Table(name = "role_of_user")
-@Getter
-@Setter
-@ToString
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-//@Builder
+@Builder
+@Entity
+@Table(name = "role_of_user")
 public class Role {
 
     @Id
