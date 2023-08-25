@@ -11,4 +11,9 @@ public class MainController {
         return "/main";
     }
 
+    @GetMapping("/favicon.ico")
+    public String icon() {
+        return "redirect:/static/picture/favicon.ico";
+    }
+
 }
