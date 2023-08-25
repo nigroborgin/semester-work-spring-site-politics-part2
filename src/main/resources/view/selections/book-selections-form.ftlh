@@ -1,15 +1,15 @@
 <#import "/spring.ftl" as spring/>
 
 <#include "../base.ftlh">
-<#macro title>Set Book-Selection info</#macro>
+<#macro title>Set <#if isMy??>My</#if> Book-Selection info</#macro>
 
 <#macro content>
 
-    <h2>Set Book-Selection info</h2>
+    <h2>Set <#if isMy??>My</#if> Book-Selection info</h2>
 
     <#if showNew>
         <div class="btn-group position-absolute start-50 translate-middle-x" role="group" aria-label="First group">
-            <a href="/selections-books/new">
+            <a href="/selections-books<#if isMy??>/my</#if>/new">
                 <button type="button" class="btn btn-outline-primary">
                     Add new book-selection
                 </button>
@@ -20,7 +20,7 @@
 
     <#if showDelete>
         <div class="btn-group position-absolute start-50 translate-middle-x" role="group" aria-label="Second group">
-            <form method="post" action="/selections-books/${selectionBookView.id?string.c!''}/delete">
+            <form method="post" action="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c!''}/delete">
                 <button type="submit" class="btn btn-outline-danger">Delete</button>
             </form>
         </div>

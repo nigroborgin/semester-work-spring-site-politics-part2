@@ -98,9 +98,12 @@ public class SelectionBookController {
     // личные подборки книг
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/my")
-    public String showAllMy() {
+    public String showAllMy(
+            @AuthenticationPrincipal CustomUserDetails userSess,
+            ModelMap map) {
 
-        return "/main";
+        selectionBookService.showAllMy(userSess, map);
+        return "selections/book-selections-list";
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -110,7 +113,8 @@ public class SelectionBookController {
             @PathVariable(required = false) Optional<Integer> id,
             ModelMap map) {
 
-        return "/main";
+        selectionBookService.showOneMy(userSess, id, map);
+        return "selections/book-selection";
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -119,17 +123,19 @@ public class SelectionBookController {
             @AuthenticationPrincipal CustomUserDetails userSess,
             ModelMap map) {
 
-        return "/main";
+        selectionBookService.showNewFormMy(userSess, map);
+        return "selections/book-selections-form";
     }
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/my/{id}/edit")
     public String editMy(
             @AuthenticationPrincipal CustomUserDetails userSess,
-            @PathVariable(required = false) Optional<Integer> id,
+            @PathVariable(required = true) Optional<Integer> id,
             ModelMap map) {
 
-        return "/main";
+        selectionBookService.showEditFormMy(userSess, id, map);
+        return "selections/book-selections-form";
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -140,7 +146,8 @@ public class SelectionBookController {
             BindingResult result,
             ModelMap map) {
 
-        return "/main";
+        selectionBookService.createMy(userSess, selectionBookFormDto);
+        return "redirect:/selections-books/my";
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -150,7 +157,8 @@ public class SelectionBookController {
             @ModelAttribute("selectionBookInfo") SelectionBookFormDto selectionBookFormDto,
             @PathVariable(required = false) Optional<Integer> id) {
 
-        return "/main";
+        selectionBookService.updateMy(userSess, selectionBookFormDto, id);
+        return "redirect:/selections-books/my";
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -159,7 +167,7 @@ public class SelectionBookController {
             @AuthenticationPrincipal CustomUserDetails userSess,
             @PathVariable(required = false) Optional<Integer> id) {
 
-        return "/main";
+        selectionBookService.deleteMy(userSess, id);
+        return "redirect:/selections-books/my";
     }
-
 }

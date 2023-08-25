@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="/static/style/bootstrap.min.css">
     <script src="/static/js/bootstrap.bundle.min.js"></script>
-<#--    <link rel="script" href="/static/js/bootstrap.bundle.min.js">-->
     <title><@title></@title></title>
 </head>
 
@@ -14,7 +13,7 @@
 <#include "./parts_of_pages/security.ftlh">
 
 <div id="header">
-    <#--        <h1>POLITICS SITE</h1>-->
+    <!--        <h1>POLITICS SITE</h1>-->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand"
            href="/main">

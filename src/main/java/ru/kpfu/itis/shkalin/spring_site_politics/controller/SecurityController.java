@@ -41,6 +41,12 @@ public class SecurityController {
         return "/errors/403_default";
     }
 
+    @GetMapping("/error")
+    public String error() {
+
+        return "error";
+    }
+
     @GetMapping("/reg")
     public String regGet(ModelMap map) {
 

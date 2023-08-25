@@ -10,7 +10,7 @@
 
         <#if showNew>
             <div class="btn-group position-absolute start-50 translate-middle-x" role="group" aria-label="First group">
-                <a href="/selections-books/new">
+                <a href="/selections-books<#if isMy??>/my</#if>/new">
                     <button type="button" class="btn btn-outline-primary">
                         Create new book-selection
                     </button>
@@ -25,7 +25,7 @@
                  aria-label="Toolbar with button groups">
                 <#if showEdit>
                     <div class="btn-group" role="group" aria-label="Second group">
-                        <a href="/selections-books/${selectionBookView.id?string.c}/edit">
+                        <a href="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c}/edit">
                             <button class="btn btn-outline-secondary">
                                 Edit selection
                             </button>
@@ -36,7 +36,7 @@
                 <#if showDelete>
                     &nbsp;
                     <div class="btn-group" role="group" aria-label="Third group">
-                        <form method="post" action="/selections-books/${selectionBookView.id?string.c}/delete">
+                        <form method="post" action="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c}/delete">
                             <button class="btn btn-outline-danger" type="submit">
                                 Delete selection
                             </button>
