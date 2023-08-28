@@ -22,16 +22,21 @@ public class PathRefactorerUtil {
         return concatAndAddCustomSeparator(File.separator, elements);
     }
 
-    public static String concatAndAddCustomSeparator(String separator, String ... elem) {
+    public static String concatAndAddCustomSeparator(String separator, String ... elements) {
 
         StringBuilder concat = new StringBuilder();
-        for (int i = 0; i < elem.length-1; i++) {
-            concat.append(elem[i]);
+        for (int i = 0; i < elements.length-1; i++) {
+            concat.append(elements[i]);
             concat.append(separator);
         }
-        concat.append(elem[elem.length-1]);
+        concat.append(elements[elements.length-1]);
 
         return concat.toString();
+    }
+
+    public static String getFileName(String separator, String pathToFile) {
+        String[] splitUrl = pathToFile.split(separator);
+        return splitUrl[splitUrl.length - 1];
     }
 
     public static String getExtension(MultipartFile file) {

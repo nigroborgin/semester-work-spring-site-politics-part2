@@ -19,33 +19,43 @@
             <br><br>
         </#if>
 
-        <#if showEdit || showDelete>
-            <div class="btn-toolbar position-absolute start-50 translate-middle-x"
-                 role="toolbar"
-                 aria-label="Toolbar with button groups">
-                <#if showEdit>
-                    <div class="btn-group" role="group" aria-label="Second group">
-                        <a href="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c}/edit">
-                            <button class="btn btn-outline-secondary">
-                                Edit selection
-                            </button>
-                        </a>
-                    </div>
-                </#if>
+        <div class="btn-toolbar position-absolute start-50 translate-middle-x"
+             role="toolbar"
+             aria-label="Toolbar with button groups">
+            <#if showEdit || showDelete>
 
-                <#if showDelete>
-                    &nbsp;
-                    <div class="btn-group" role="group" aria-label="Third group">
-                        <form method="post" action="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c}/delete">
-                            <button class="btn btn-outline-danger" type="submit">
-                                Delete selection
-                            </button>
-                        </form>
-                    </div>
-                </#if>
+                    <#if showEdit>
+                        <div class="btn-group" role="group" aria-label="Second group">
+                            <a href="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c}/edit">
+                                <button class="btn btn-outline-secondary">
+                                    Edit
+                                </button>
+                            </a>
+                        </div>
+                        &nbsp;
+                    </#if>
+
+                    <#if showDelete>
+                        <div class="btn-group" role="group" aria-label="Third group">
+                            <form method="post" action="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c}/delete">
+                                <button class="btn btn-outline-danger" type="submit">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                        &nbsp;
+                    </#if>
+            </#if>
+
+            <div class="btn-group" role="group" aria-label="Fourth group">
+                <a href="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c}/download">
+                    <button class="btn btn-outline-success">
+                        Download
+                    </button>
+                </a>
             </div>
-            <br><br>
-        </#if>
+        </div>
+        <br><br>
 
 
         <#if (selectionBookView.bookList)??>

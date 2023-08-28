@@ -1,9 +1,9 @@
 package ru.kpfu.itis.shkalin.spring_site_politics.service.db;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.ModelMap;
-import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookViewForSelectionDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.selections_book.SelectionBookFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.selections_book.SelectionBookViewAllDto;
@@ -11,14 +11,17 @@ import ru.kpfu.itis.shkalin.spring_site_politics.dto.selections_book.SelectionBo
 import ru.kpfu.itis.shkalin.spring_site_politics.exception.CustomAccessDeniedException;
 import ru.kpfu.itis.shkalin.spring_site_politics.exception.NotFoundException;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.Book;
-import ru.kpfu.itis.shkalin.spring_site_politics.model.Post;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.SelectionBook;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.User;
 import ru.kpfu.itis.shkalin.spring_site_politics.repository.BookRepository;
 import ru.kpfu.itis.shkalin.spring_site_politics.repository.SelectionBookRepository;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
+import ru.kpfu.itis.shkalin.spring_site_politics.service.file_storage.StorageService;
 import ru.kpfu.itis.shkalin.spring_site_politics.util.ConverterUtil;
+import ru.kpfu.itis.shkalin.spring_site_politics.util.PathRefactorerUtil;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,11 +29,17 @@ import java.util.Optional;
 @Service
 public class SelectionBookService {
 
+    @Value("${upload.realpath}")
+    private String uploadPath;
+
     @Autowired
     SelectionBookRepository selectionRepository;
 
     @Autowired
     BookRepository bookRepository;
+
+    @Autowired
+    StorageService storageService;
 
     public void showAll(CustomUserDetails userSess, ModelMap map) {
 
@@ -213,6 +222,7 @@ public class SelectionBookService {
     }
 
     public void delete(CustomUserDetails userSess, Optional<Integer> id) {
+
         if (id.isPresent()) {
 
             User userFromSession = userSess.getUser();
@@ -225,6 +235,26 @@ public class SelectionBookService {
                 throw new CustomAccessDeniedException("No rights to delete the selection-book.");
             }
         }
+    }
+
+    public String download(Optional<Integer> id, ModelMap map) {
+
+        String archiveName = null;
+        if (id.isPresent()) {
+
+            Optional<SelectionBook> selectionById = selectionRepository.findById(id.get());
+            List<Book> books = selectionById.get().getBooks();
+            List<String> bookFilesystemNames = books.stream()
+                    .map(b -> PathRefactorerUtil.getFileName("/", b.getFileUrl()))
+                    .toList();
+
+            try {
+                archiveName = storageService.createArchive(bookFilesystemNames);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return archiveName;
     }
 
     public void showAllMy(CustomUserDetails userSess, ModelMap map) {
@@ -435,4 +465,27 @@ public class SelectionBookService {
             }
         }
     }
+
+    public String downloadMy(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
+
+        String result = null;
+        if (userSess != null) {
+
+            User userFromSession = userSess.getUser();
+            SelectionBook selectionBookById = selectionRepository.findById(id.get())
+                    .orElseThrow(() -> new NotFoundException("book-selection"));
+            User userFromSelection = selectionBookById.getUser();
+
+            boolean isAccess = false;
+            if (userFromSelection != null) {
+                isAccess = Objects.equals(userFromSession.getId(), userFromSelection.getId());
+            }
+
+            if (isAccess) {
+                result = download(id, map);
+            }
+        }
+        return result;
+    }
+
 }

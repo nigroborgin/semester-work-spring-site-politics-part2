@@ -1,6 +1,10 @@
 package ru.kpfu.itis.shkalin.spring_site_politics.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -10,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.selections_book.SelectionBookFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
 import ru.kpfu.itis.shkalin.spring_site_politics.service.db.SelectionBookService;
+import ru.kpfu.itis.shkalin.spring_site_politics.service.file_storage.StorageService;
 
 import java.util.Optional;
 
@@ -19,6 +24,9 @@ public class SelectionBookController {
 
     @Autowired
     private SelectionBookService selectionBookService;
+
+    @Autowired
+    private StorageService storageService;
 
     @GetMapping
     public String showAll(
@@ -60,6 +68,15 @@ public class SelectionBookController {
         return "selections/book-selections-form";
     }
 
+    @GetMapping("/{id}/download")
+    public String downloadArchive(
+            @PathVariable(required = true) Optional<Integer> id,
+            ModelMap map) {
+
+        String archiveName = selectionBookService.download(id, map);
+        return "redirect:/file/archives/" + archiveName;
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/new")
     public String addHandle(
@@ -92,7 +109,6 @@ public class SelectionBookController {
         selectionBookService.delete(userSess, id);
         return "redirect:/selections-books";
     }
-
 
 
     // личные подборки книг
@@ -169,5 +185,16 @@ public class SelectionBookController {
 
         selectionBookService.deleteMy(userSess, id);
         return "redirect:/selections-books/my";
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/my/{id}/download")
+    public String downloadArchiveMy(
+            @AuthenticationPrincipal CustomUserDetails userSess,
+            @PathVariable(required = true) Optional<Integer> id,
+            ModelMap map) {
+
+        String archiveName = selectionBookService.downloadMy(userSess, id, map);
+        return "redirect:/file/archives/" + archiveName;
     }
 }

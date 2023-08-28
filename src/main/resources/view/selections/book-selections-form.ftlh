@@ -11,7 +11,7 @@
         <div class="btn-group position-absolute start-50 translate-middle-x" role="group" aria-label="First group">
             <a href="/selections-books<#if isMy??>/my</#if>/new">
                 <button type="button" class="btn btn-outline-primary">
-                    Add new book-selection
+                    Create new book-selection
                 </button>
             </a>
         </div>
@@ -21,7 +21,9 @@
     <#if showDelete>
         <div class="btn-group position-absolute start-50 translate-middle-x" role="group" aria-label="Second group">
             <form method="post" action="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c!''}/delete">
-                <button type="submit" class="btn btn-outline-danger">Delete</button>
+                <button type="submit" class="btn btn-outline-danger">
+                    Delete
+                </button>
             </form>
         </div>
     </#if>

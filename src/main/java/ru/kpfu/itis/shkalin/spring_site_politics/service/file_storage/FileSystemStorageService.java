@@ -8,13 +8,13 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.kpfu.itis.shkalin.spring_site_politics.exception.StorageNotFoundException;
 import ru.kpfu.itis.shkalin.spring_site_politics.util.PathRefactorerUtil;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class FileSystemStorageService implements StorageService {
@@ -74,6 +74,33 @@ public class FileSystemStorageService implements StorageService {
         } catch (MalformedURLException e) {
             throw new StorageNotFoundException("file", "Could not read file: " + filename, e);
         }
+    }
+
+    public String createArchive(List<String> filesPaths) throws IOException {
+
+        String archiveName = "archive_" + UUID.randomUUID() + ".zip";
+        String fullArchiveName = uploadPath + File.separator + "archives" + File.separator + archiveName;
+
+        final FileOutputStream fos = new FileOutputStream(fullArchiveName);
+        ZipOutputStream zipOut = new ZipOutputStream(fos);
+
+        for (String srcFile : filesPaths) {
+            Resource book = getResourceByName("books", srcFile);
+            InputStream inputStream = book.getInputStream();
+            ZipEntry zipEntry = new ZipEntry(book.getFilename());
+            zipOut.putNextEntry(zipEntry);
+
+            byte[] bytesBuffer = new byte[1024];
+            int length;
+            while ((length = inputStream.read(bytesBuffer)) >= 0) {
+                zipOut.write(bytesBuffer, 0, length);
+            }
+            inputStream.close();
+        }
+        zipOut.close();
+        fos.close();
+
+        return archiveName;
     }
 
 }
