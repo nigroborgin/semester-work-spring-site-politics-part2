@@ -101,6 +101,11 @@
             <version>5.7.10</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.trivee.fb2pdf</groupId>
+            <artifactId>fb2pdf</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>
