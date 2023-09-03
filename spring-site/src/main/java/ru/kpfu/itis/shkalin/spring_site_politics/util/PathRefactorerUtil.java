@@ -34,9 +34,14 @@ public class PathRefactorerUtil {
         return concat.toString();
     }
 
-    public static String getFileName(String separator, String pathToFile) {
+    public static String getFileNameByUrl(String separator, String pathToFile) {
         String[] splitUrl = pathToFile.split(separator);
         return splitUrl[splitUrl.length - 1];
+    }
+
+    public static String getFileNameWithoutExtension(String pathToFile) {
+        String[] splitUrl = pathToFile.split("\\.");
+        return splitUrl[splitUrl.length - 2];
     }
 
     public static String getExtension(MultipartFile file) {

@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/main", false)
-                .failureUrl("/login?error=true")
+                .failureUrl("/login-error")
 //                .failureHandler(authenticationFailureHandler())
         .and()
             .rememberMe()

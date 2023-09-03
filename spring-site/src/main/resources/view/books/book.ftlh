@@ -16,7 +16,7 @@
         <br><br>
     </#if>
 
-    <#if showEdit || showDelete || bookView.fileUrl??>
+    <#if showEdit || showDelete || bookView.formatsOfBook??>
         <div class="btn-toolbar position-absolute start-50 translate-middle-x"
              role="toolbar"
              aria-label="Toolbar with button groups">
@@ -40,17 +40,25 @@
                 </div>
             </#if>
 
-            <#if bookView.fileUrl??>
+            <#if bookView.formatsOfBook??>
                 &nbsp;
-                <div class="btn-group" role="group" aria-label="Fiftieth group">
-                    <a href="${bookView.fileUrl}" download="">
-                        <button type="button" class="btn btn-outline-success">
-                            Download
-                        </button>
-                    </a>
+                <div class="btn-group" role="group" aria-label="Fourth group">
+                    <button type="button" class="btn btn-outline-success">
+                        Download
+                    </button>
+                    <button type="button" class="btn btn-outline-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">dropdown switcher</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <#list bookView.formatsOfBook as f>
+                            <li><a class="dropdown-item" href="${f.url}">${f.formatName!''}</a></li>
+                        </#list>
+                    </ul>
                 </div>
-                <br>
+            <#else>
+                <img width="24" src="/static/picture/prohibition.png">
             </#if>
+            <br>
 
         </div>
         <br><br>

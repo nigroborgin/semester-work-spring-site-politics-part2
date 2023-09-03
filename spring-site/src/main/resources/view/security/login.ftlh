@@ -7,7 +7,13 @@
 
     <h2>Login</h2>
 
-    <form method="post">
+    <#if loginError??>
+        <div style="display:inline-block" class="alert alert-danger" role="alert">
+            ${loginError}
+        </div>
+    </#if>
+
+    <form method="post" action="/login">
         <@spring.bind path="loginData"/>
         <div class="form-group">
             <label>Username:

@@ -95,18 +95,22 @@
                         </#if>
                         <td>
                             <center>
-                                <#if book.fileUrl??>
-                                    <a href="${book.fileUrl}" download="">
-                                        <button class="btn btn-outline-dark btn-sm">
-                                            <center>
-                                                <img width="24" src="/static/picture/download-file.png">
-                                            </center>
+                                <#if book.formatsOfBook??>
+                                    <div class="btn-group" role="group" aria-label="Fifth group">
+                                        <button type="button" class="btn btn-outline-dark">
+                                            <img width="24" src="/static/picture/download-file.png">
                                         </button>
-                                    </a>
+                                        <button type="button" class="btn btn-outline-dark dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span class="visually-hidden">dropdown switcher</span>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <#list book.formatsOfBook as f>
+                                                <li><a class="dropdown-item" href="${f.url}">${f.formatName!''}</a></li>
+                                            </#list>
+                                        </ul>
+                                    </div>
                                 <#else>
-                                    <center>
-                                        <img width="24" src="/static/picture/prohibition.png">
-                                    </center>
+                                    <img width="24" src="/static/picture/prohibition.png">
                                 </#if>
                             </center>
                         </td>

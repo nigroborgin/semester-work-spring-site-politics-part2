@@ -244,7 +244,9 @@ public class SelectionBookService {
             Optional<SelectionBook> selectionById = selectionRepository.findById(id.get());
             List<Book> books = selectionById.get().getBooks();
             List<String> bookFilesystemNames = books.stream()
-                    .map(b -> PathRefactorerUtil.getFileName("/", b.getFileUrl()))
+                    .map(b -> PathRefactorerUtil.getFileNameByUrl("/",
+                            /*todo: сделать выбор формата при скачивании подборки*/
+                            b.getFormats().get(0).getUrl()))
                     .toList();
 
             try {

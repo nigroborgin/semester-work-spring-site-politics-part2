@@ -1,5 +1,6 @@
 package ru.kpfu.itis.shkalin.spring_site_politics.controller;
 
+import com.itextpdf.text.DocumentException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -8,6 +9,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.trivee.fb2pdf.FB2toPDFException;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
 import ru.kpfu.itis.shkalin.spring_site_politics.service.db.BookService;
@@ -68,7 +70,7 @@ public class BookController {
             @AuthenticationPrincipal CustomUserDetails userSess,
             @ModelAttribute("bookInfo") BookFormDto bookFormDto,
             @RequestParam("file") MultipartFile bookFile,
-            ModelMap map) throws IOException {
+            ModelMap map) throws IOException, DocumentException, FB2toPDFException {
 
         bookService.create(userSess, bookFormDto, bookFile);
         return "redirect:/books";
@@ -80,7 +82,7 @@ public class BookController {
             @AuthenticationPrincipal CustomUserDetails userSess,
             @ModelAttribute("bookInfo") BookFormDto bookFormDto,
             @RequestParam("file") MultipartFile bookFile,
-            @PathVariable Optional<Integer> id) throws IOException {
+            @PathVariable Optional<Integer> id) throws IOException, DocumentException, FB2toPDFException {
 
         bookService.update(userSess, bookFormDto, bookFile, id);
         return "redirect:/books";

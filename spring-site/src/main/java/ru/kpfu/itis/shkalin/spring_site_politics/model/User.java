@@ -3,6 +3,7 @@ package ru.kpfu.itis.shkalin.spring_site_politics.model;
 import lombok.*;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 
 @Data
 @AllArgsConstructor

@@ -3,8 +3,8 @@ package ru.kpfu.itis.shkalin.spring_site_politics.model;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @AllArgsConstructor
@@ -28,20 +28,19 @@ public class Book {
     @Column(name = "author")
     private String author;
 
-    @Column(name = "file_url")
-    private String fileUrl;
+    @OneToMany(
+            fetch = FetchType.EAGER,
+            cascade = CascadeType.ALL,
+            mappedBy = "book")
+    private List<BookToFormatBook> formats;
 
-//    @ManyToMany(mappedBy = "books")
-//    private List<SelectionBook> selectionsOfBook;
-//
-//    public void addSelection(SelectionBook selection) {
-//        if (selectionsOfBook == null) {
-//            selectionsOfBook = new ArrayList<>();
-//        }
-//        if (!selectionsOfBook.contains(selection)) {
-//            selectionsOfBook.add(selection);
-//            selection.addBook(this);
-//        }
-//    }
+    public Optional<BookToFormatBook> getFormatByName(String nameOfFormat) {
+        for (BookToFormatBook format : formats) {
+            if (format.getFormat().getName().equals(nameOfFormat)) {
+                return Optional.of(format);
+            }
+        }
+        return Optional.empty();
+    }
 
 }

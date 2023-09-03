@@ -6,7 +6,7 @@
     <#if postView??>
         <h2>${(postView.title)!''}</h2>
 
-    <#--        <div class="btn-toolbar " role="toolbar" aria-label="Toolbar with button groups">-->
+        <#--<div class="btn-toolbar " role="toolbar" aria-label="Toolbar with button groups">-->
         <#if showNew>
             <div class="btn-group position-absolute start-50 translate-middle-x" role="group" aria-label="First group">
                 <a href="/posts/new">
@@ -15,9 +15,9 @@
                     </button>
                 </a>
             </div>
-
         </#if>
-    <#--        </div>-->
+        <#--</div>-->
+
         <#if showEdit || showDelete>
             <br><br>
             <div class="btn-toolbar position-absolute start-50 translate-middle-x"
@@ -48,8 +48,8 @@
         <br>
         ${(postView.date)!''}
         <br>
-    <#--        <a href="/users/${postView.user.id}/postViews">View postViews from <strong>${postView.authorOfPost!}</strong></a>-->
-    <#--        <br>-->
+        <#--<a href="/users/${postView.user.id}/postViews">View postViews from <strong>${postView.authorOfPost!}</strong></a>-->
+        <#--<br>-->
         <p><br>${(postView.text)!''}</p>
     </#if>
 
