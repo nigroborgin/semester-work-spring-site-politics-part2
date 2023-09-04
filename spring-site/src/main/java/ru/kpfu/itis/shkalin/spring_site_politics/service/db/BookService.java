@@ -50,160 +50,83 @@ public class BookService {
     @Autowired
     StorageService storageService;
 
-    public void showAll(CustomUserDetails userSess, ModelMap map) {
+    public void showAll(ModelMap map) {
 
         List<BookViewDto> bookList = bookRepository.findAll().stream()
-                .map(this::convertionBookToViewDto)
+                .map(this::conversionBookToViewDto)
                 .toList();
-
-        boolean showNew = false;
-        boolean showEdit = false;
-        boolean showDelete = false;
-
-        if (userSess != null) {
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-            if (isAccess) {
-                showNew = true;
-                showEdit = true;
-                showDelete = true;
-            }
-        }
-
-        map.put("showNew", showNew);
-        map.put("showEdit", showEdit);
-        map.put("showDelete", showDelete);
 
         map.put("bookList", bookList);
     }
 
-    public void showOne(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
+    public void showOne(Optional<Integer> id, ModelMap map) {
 
-        if (id.isPresent()) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book is not present"));
 
-            Book book = bookRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("book"));
-            BookViewDto bookViewDto = convertionBookToViewDto(book);
-            boolean showNew = false;
-            boolean showEdit = false;
-            boolean showDelete = false;
+        Book book = bookRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book"));
+        BookViewDto bookViewDto = conversionBookToViewDto(book);
 
-            if (userSess != null) {
-                User userFromSession = userSess.getUser();
-                boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-                if (isAccess) {
-                    showNew = true;
-                    showEdit = true;
-                    showDelete = true;
-                }
-            }
-
-            map.put("showNew", showNew);
-            map.put("showEdit", showEdit);
-            map.put("showDelete", showDelete);
-
-            map.put("bookView", bookViewDto);
-
-        }
+        map.put("bookView", bookViewDto);
     }
 
-    public void showNewForm(CustomUserDetails userSess, ModelMap map) {
-
-        User userFromSession = userSess.getUser();
-        boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-        if (isAccess) {
-            map.put("showNew", false);
-            map.put("showEdit", false);
-            map.put("showDelete", false);
-
-            map.put("bookView", new BookViewDto());
-            map.put("bookEdit", new BookFormDto());
-
-        } else {
-            throw new CustomAccessDeniedException("No rights to create the book.");
-        }
+    public void showNewForm(ModelMap modelMap) {
+        modelMap.put("bookView", new BookViewDto());
+        modelMap.put("bookEdit", new BookFormDto());
     }
 
-    public void showEditForm(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
+    public void showEditForm(Optional<Integer> id, ModelMap map) {
 
-        if (id.isPresent()) {
-            Book book = bookRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("book"));
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book is not present"));
 
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        Book book = bookRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book"));
+        BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(book, new BookViewDto());
 
-            if (isAccess) {
-                BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(book, new BookViewDto());
+        map.put("bookView", bookViewDto);
+        map.put("bookEdit", new BookFormDto());
 
-                map.put("showNew", true);
-                map.put("showEdit", true);
-                map.put("showDelete", true);
-
-                map.put("bookView", bookViewDto);
-                map.put("bookEdit", new BookFormDto());
-
-            } else {
-                throw new CustomAccessDeniedException("No rights to edit the book.");
-            }
-        }
     }
 
-    public void create(CustomUserDetails userSess, BookFormDto bookFormDto, MultipartFile bookFile) throws IOException, DocumentException, FB2toPDFException {
+    public void showEditFormWithNewData(Optional<Integer> id, BookFormDto bookFormDto, ModelMap map) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book is not present"));
 
-        User userFromSession = userSess.getUser();
-        boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        Book book = bookRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book"));
+        BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(book, new BookViewDto());
+        ConverterUtil.update(bookFormDto, bookViewDto);
 
-        if (isAccess) {
-            Book book = (Book) ConverterUtil.updateAndReturn(bookFormDto, new Book());
-            uploadBookFile(bookFile, book);
-            Book savedBook = bookRepository.save(book);
-            bookToFormatBookRepository.saveAll(savedBook.getFormats());
-
-        } else {
-            throw new CustomAccessDeniedException("No rights to create the book.");
-        }
+        map.put("bookView", bookViewDto);
+        map.put("bookEdit", new BookFormDto());
     }
 
-    public void update(CustomUserDetails userSess, BookFormDto bookFormDto, MultipartFile bookFile, Optional<Integer> id)
+    public void create(BookFormDto bookFormDto, MultipartFile bookFile) throws IOException, DocumentException, FB2toPDFException {
+
+        Book book = (Book) ConverterUtil.updateAndReturn(bookFormDto, new Book());
+        uploadBookFile(bookFile, book);
+        Book savedBook = bookRepository.save(book);
+        bookToFormatBookRepository.saveAll(savedBook.getFormats());
+    }
+
+    public void update(BookFormDto bookFormDto, MultipartFile bookFile, Optional<Integer> id)
             throws IOException, DocumentException, FB2toPDFException {
 
-        if (id.isPresent()) {
-            Book bookById = bookRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("book"));
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book is not present"));
 
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        Book bookById = bookRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book"));
 
-            if (isAccess) {
-                Book book = (Book) ConverterUtil.updateAndReturn(bookFormDto, bookById);
-                uploadBookFile(bookFile, book);
-                Book savedBook = bookRepository.save(book);
-                bookToFormatBookRepository.saveAll(savedBook.getFormats());
-
-            } else {
-                throw new CustomAccessDeniedException("No rights to update the book.");
-            }
-        }
+        Book book = (Book) ConverterUtil.updateAndReturn(bookFormDto, bookById);
+        uploadBookFile(bookFile, book);
+        Book savedBook = bookRepository.save(book);
+        bookToFormatBookRepository.saveAll(savedBook.getFormats());
     }
 
-    public void delete(CustomUserDetails userSess, Optional<Integer> id) {
+    public void delete(Optional<Integer> id) {
 
-        if (id.isPresent()) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book is not present"));
 
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-            if (isAccess) {
-                bookRepository.deleteById(id.get());
-
-            } else {
-                throw new CustomAccessDeniedException("No rights to delete the book.");
-            }
-        }
+        bookRepository.deleteById(id.get());
     }
 
     private void uploadBookFile(MultipartFile bookFile, Book book)
@@ -242,7 +165,7 @@ public class BookService {
         }
     }
 
-    private BookViewDto convertionBookToViewDto(Book book) {
+    private BookViewDto conversionBookToViewDto(Book book) {
         BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(book, new BookViewDto());
         bookViewDto.setFormatsOfBook(
                 book.getFormats().stream()

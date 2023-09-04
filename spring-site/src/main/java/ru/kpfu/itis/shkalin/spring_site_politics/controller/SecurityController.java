@@ -74,7 +74,7 @@ public class SecurityController {
             BindingResult bindingResult,
             ModelMap map) {
 
-        boolean isValidDefault = validateDefault(userDto, map, bindingResult);
+        boolean isValidDefault = ControllerUtil.validateDefault(map, bindingResult);
         boolean isValidUsername = validateUsername(userDto, map);
         boolean isValidPasswords = validatePasswords(userDto, map);
 
@@ -90,14 +90,6 @@ public class SecurityController {
         } else {
             return showRegForm(map, userDto);
         }
-    }
-
-    private boolean validateDefault(UserFormRegisterDto userDto, ModelMap map, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            map.mergeAttributes(ControllerUtil.getErrorsMap(bindingResult));
-            return false;
-        }
-        return true;
     }
 
     private boolean validateUsername(UserFormRegisterDto userDto, ModelMap map) {

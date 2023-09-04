@@ -11,20 +11,21 @@ import javax.validation.constraints.*;
 @Builder
 public class UserFormRegisterDto implements CredentialsContainer {
 
-    @Size(min = 2, max = 30, message = "Length of username should be from 2 to 30 characters")
+    @Size(min = 2, max = 255, message = "Length of username should be from 2 to 30 characters")
     @NotBlank(message = "Username cannot be empty")
     private String username;
 
     @Email(message = "Email is not correct")
     @NotBlank(message = "Email cannot be empty")
+    @Size(max = 255, message = "Length of email address should Not be more 255 characters")
     private String email;
 
     @NotBlank(message = "Password cannot be empty")
-    @Size(min = 6, message = "Length of password should be more 6 characters")
+    @Size(min = 6, max = 255, message = "Length of password should be more 6 characters")
     private String password;
 
     @NotBlank(message = "Second password cannot be empty")
-    @Size(min = 6, message = "Length of password should be more 6 characters")
+    @Size(min = 6, max = 255, message = "Length of password should be more 6 characters")
     private String password2;
 
     @Override
@@ -33,13 +34,4 @@ public class UserFormRegisterDto implements CredentialsContainer {
         this.password2 = null;
     }
 
-    @Override
-    public String toString() {
-        return "UserFormRegisterDto{" +
-                "username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", password2='" + password2 + '\'' +
-                '}';
-    }
 }

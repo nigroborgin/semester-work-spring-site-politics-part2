@@ -11,10 +11,17 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.trivee.fb2pdf.FB2toPDFException;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookFormDto;
+import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookViewDto;
+import ru.kpfu.itis.shkalin.spring_site_politics.model.User;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
 import ru.kpfu.itis.shkalin.spring_site_politics.service.db.BookService;
+import ru.kpfu.itis.shkalin.spring_site_politics.util.ControllerUtil;
+import ru.kpfu.itis.shkalin.spring_site_politics.util.ConverterUtil;
 
+import javax.naming.ldap.Control;
+import javax.validation.Valid;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Controller
@@ -27,9 +34,15 @@ public class BookController {
     @GetMapping
     public String showAll(
             @AuthenticationPrincipal CustomUserDetails userSess,
-            ModelMap map) {
+            ModelMap modelMap) {
 
-        bookService.showAll(userSess, map);
+        if (checkAdmin(userSess)) {
+            enableButtons(modelMap);
+        } else {
+            disableButtons(modelMap);
+        }
+
+        bookService.showAll(modelMap);
         return "/books/book-list";
     }
 
@@ -37,65 +50,113 @@ public class BookController {
     public String showOne(
             @AuthenticationPrincipal CustomUserDetails userSess,
             @PathVariable(required = false) Optional<Integer> id,
-            ModelMap map) {
+            ModelMap modelMap) {
 
-        bookService.showOne(userSess, id, map);
+        if (checkAdmin(userSess)) {
+            enableButtons(modelMap);
+        } else {
+            disableButtons(modelMap);
+        }
+
+        bookService.showOne(id, modelMap);
         return "/books/book";
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/new")
     public String add(
-            @AuthenticationPrincipal CustomUserDetails userSess,
-            ModelMap map) {
+            ModelMap modelMap) {
 
-        bookService.showNewForm(userSess, map);
-        return "/books/book-form";
+        disableButtons(modelMap);
+
+        bookService.showNewForm(modelMap);
+        return showForm();
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/edit")
     public String edit(
-            @AuthenticationPrincipal CustomUserDetails userSess,
             @PathVariable(required = false) Optional<Integer> id,
-            ModelMap map) {
+            ModelMap modelMap) {
 
-        bookService.showEditForm(userSess, id, map);
-        return "/books/book-form";
+        enableButtons(modelMap);
+
+        bookService.showEditForm(id, modelMap);
+        return showForm();
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/new")
     public String addHandle(
-            @AuthenticationPrincipal CustomUserDetails userSess,
-            @ModelAttribute("bookInfo") BookFormDto bookFormDto,
+            @Valid @ModelAttribute("bookInfo") BookFormDto bookFormDto,
+            BindingResult bindingResult,
             @RequestParam("file") MultipartFile bookFile,
-            ModelMap map) throws IOException, DocumentException, FB2toPDFException {
+            ModelMap modelMap) throws IOException, DocumentException, FB2toPDFException {
 
-        bookService.create(userSess, bookFormDto, bookFile);
-        return "redirect:/books";
+        boolean isValidDefault = ControllerUtil.validateDefault(modelMap, bindingResult);
+
+        if (isValidDefault) {
+            bookService.create(bookFormDto, bookFile);
+            return "redirect:/books";
+        } else {
+            modelMap.addAttribute("bookView", bookFormDto);
+            return showForm();
+        }
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/edit")
     public String editHandle(
-            @AuthenticationPrincipal CustomUserDetails userSess,
-            @ModelAttribute("bookInfo") BookFormDto bookFormDto,
+            @Valid @ModelAttribute("bookInfo") BookFormDto bookFormDto,
+            BindingResult bindingResult,
             @RequestParam("file") MultipartFile bookFile,
-            @PathVariable Optional<Integer> id) throws IOException, DocumentException, FB2toPDFException {
+            @PathVariable Optional<Integer> id,
+            ModelMap modelMap) throws IOException, DocumentException, FB2toPDFException {
 
-        bookService.update(userSess, bookFormDto, bookFile, id);
+        boolean isValidDefault = ControllerUtil.validateDefault(modelMap, bindingResult);
+
+        if (isValidDefault) {
+            bookService.update(bookFormDto, bookFile, id);
+            return "redirect:/books";
+        } else {
+            enableButtons(modelMap);
+            bookService.showEditFormWithNewData(id, bookFormDto, modelMap);
+
+            return showForm();
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/delete")
+    public String deleteHandle(
+            @PathVariable Optional<Integer> id) {
+
+        bookService.delete(id);
         return "redirect:/books";
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/{id}/delete")
-    public String deleteHandle(
-            @AuthenticationPrincipal CustomUserDetails userSess,
-            @PathVariable Optional<Integer> id) {
+    
+    
+    private boolean checkAdmin(CustomUserDetails userSess) {
+        if (userSess != null) {
+            return Objects.equals(userSess.getUser().getRole().getName(), "ROLE_ADMIN");
+        } else {
+            return false;
+        }
+    }
+    private void enableButtons(ModelMap modelMap) {
+        modelMap.put("showNew", true);
+        modelMap.put("showEdit", true);
+        modelMap.put("showDelete", true);
+    }
+    private void disableButtons(ModelMap modelMap) {
+        modelMap.put("showNew", false);
+        modelMap.put("showEdit", false);
+        modelMap.put("showDelete", false);
+    }
 
-        bookService.delete(userSess, id);
-        return "redirect:/books";
+    private String showForm() {
+        return "/books/book-form";
     }
 
 }
