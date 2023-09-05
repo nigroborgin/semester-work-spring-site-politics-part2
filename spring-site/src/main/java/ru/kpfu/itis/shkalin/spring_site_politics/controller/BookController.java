@@ -11,17 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.trivee.fb2pdf.FB2toPDFException;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookFormDto;
-import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookViewDto;
-import ru.kpfu.itis.shkalin.spring_site_politics.model.User;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
 import ru.kpfu.itis.shkalin.spring_site_politics.service.db.BookService;
 import ru.kpfu.itis.shkalin.spring_site_politics.util.ControllerUtil;
-import ru.kpfu.itis.shkalin.spring_site_politics.util.ConverterUtil;
 
-import javax.naming.ldap.Control;
 import javax.validation.Valid;
 import java.io.IOException;
-import java.util.Objects;
 import java.util.Optional;
 
 @Controller
@@ -36,13 +31,9 @@ public class BookController {
             @AuthenticationPrincipal CustomUserDetails userSess,
             ModelMap modelMap) {
 
-        if (checkAdmin(userSess)) {
-            enableButtons(modelMap);
-        } else {
-            disableButtons(modelMap);
-        }
-
+        ControllerUtil.enableButtonsIfAdmin(userSess, modelMap);
         bookService.showAll(modelMap);
+
         return "/books/book-list";
     }
 
@@ -52,13 +43,9 @@ public class BookController {
             @PathVariable(required = false) Optional<Integer> id,
             ModelMap modelMap) {
 
-        if (checkAdmin(userSess)) {
-            enableButtons(modelMap);
-        } else {
-            disableButtons(modelMap);
-        }
-
+        ControllerUtil.enableButtonsIfAdmin(userSess, modelMap);
         bookService.showOne(id, modelMap);
+
         return "/books/book";
     }
 
@@ -67,9 +54,9 @@ public class BookController {
     public String add(
             ModelMap modelMap) {
 
-        disableButtons(modelMap);
-
+        ControllerUtil.disableButtons(modelMap);
         bookService.showNewForm(modelMap);
+
         return showForm();
     }
 
@@ -79,9 +66,9 @@ public class BookController {
             @PathVariable(required = false) Optional<Integer> id,
             ModelMap modelMap) {
 
-        enableButtons(modelMap);
-
+        ControllerUtil.enableButtons(modelMap);
         bookService.showEditForm(id, modelMap);
+
         return showForm();
     }
 
@@ -99,6 +86,7 @@ public class BookController {
             bookService.create(bookFormDto, bookFile);
             return "redirect:/books";
         } else {
+            ControllerUtil.disableButtons(modelMap);
             modelMap.addAttribute("bookView", bookFormDto);
             return showForm();
         }
@@ -119,7 +107,7 @@ public class BookController {
             bookService.update(bookFormDto, bookFile, id);
             return "redirect:/books";
         } else {
-            enableButtons(modelMap);
+            ControllerUtil.enableButtons(modelMap);
             bookService.showEditFormWithNewData(id, bookFormDto, modelMap);
 
             return showForm();
@@ -133,26 +121,6 @@ public class BookController {
 
         bookService.delete(id);
         return "redirect:/books";
-    }
-
-    
-    
-    private boolean checkAdmin(CustomUserDetails userSess) {
-        if (userSess != null) {
-            return Objects.equals(userSess.getUser().getRole().getName(), "ROLE_ADMIN");
-        } else {
-            return false;
-        }
-    }
-    private void enableButtons(ModelMap modelMap) {
-        modelMap.put("showNew", true);
-        modelMap.put("showEdit", true);
-        modelMap.put("showDelete", true);
-    }
-    private void disableButtons(ModelMap modelMap) {
-        modelMap.put("showNew", false);
-        modelMap.put("showEdit", false);
-        modelMap.put("showDelete", false);
     }
 
     private String showForm() {

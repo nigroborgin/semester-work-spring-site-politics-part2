@@ -1,6 +1,5 @@
 package ru.kpfu.itis.shkalin.spring_site_politics.service.db;
 
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.ModelMap;
@@ -13,6 +12,7 @@ import ru.kpfu.itis.shkalin.spring_site_politics.model.User;
 import ru.kpfu.itis.shkalin.spring_site_politics.repository.PostRepository;
 import ru.kpfu.itis.shkalin.spring_site_politics.repository.UserRepository;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
+import ru.kpfu.itis.shkalin.spring_site_politics.util.ControllerUtil;
 import ru.kpfu.itis.shkalin.spring_site_politics.util.ConverterUtil;
 
 import java.time.LocalDateTime;
@@ -30,10 +30,7 @@ public class PostService {
     @Autowired
     UserRepository userRepository;
 
-    public void showAll(CustomUserDetails userSess, ModelMap map) {
-
-        boolean showEdit = false;
-        boolean showDelete = false;
+    public void showAll(ModelMap map) {
 
         List<PostViewDto> postViewDtoList = postRepository.findAll().stream()
                 .map(this::getPostViewDto)
@@ -46,98 +43,37 @@ public class PostService {
                             return 1;
                         else
                             return -1;
-                    }})
+                    }
+                })
                 .toList();
-
-        if (userSess != null) {
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-            if (isAccess) {
-                showEdit = true;
-                showDelete = true;
-
-            }
-        }
-
-
-        map.put("showNew", true);
-        map.put("showEdit", showEdit);
-        map.put("showDelete", showDelete);
 
         map.put("postList", postViewDtoList);
     }
 
-    public void showOne(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
+    public void showOne(Optional<Integer> id, ModelMap map) {
 
-        if (id.isPresent()) {
+        Post post = getPostById(id);
+        PostViewDto postViewDto = getPostViewDto(post);
 
-            Post post = postRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("post"));
-            PostViewDto postViewDto = getPostViewDto(post);
-            boolean showEdit = false;
-            boolean showDelete = false;
-
-            if (userSess != null) {
-                User userFromSession = userSess.getUser();
-                boolean isAccess = Objects.equals(post.getUser().getId(), userFromSession.getId())
-                        || Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-                if (isAccess) {
-                    showEdit = true;
-                    showDelete = true;
-                }
-            }
-
-            map.put("showNew", true);
-            map.put("showEdit", showEdit);
-            map.put("showDelete", showDelete);
-
-            map.put("postView", postViewDto);
-
-        }
+        map.put("postView", postViewDto);
     }
 
     public void showNewForm(CustomUserDetails userSess, ModelMap map) {
 
-        if (userSess != null) {
-            map.put("showNew", false);
-            map.put("showDelete", false);
-            map.put("showEdit", false);
+        PostViewDto postViewDto = new PostViewDto();
+        postViewDto.setAuthorOfPost(userSess.getUsername());
 
-            PostViewDto postViewDto = new PostViewDto();
-            postViewDto.setAuthorOfPost(userSess.getUsername());
-            map.put("postView", postViewDto);
-            map.put("postForm", new PostFormDto());
-
-        } else {
-            throw new CustomAccessDeniedException("No rights to create the post.");
-        }
+        map.put("postView", postViewDto);
+        map.put("postForm", new PostFormDto());
     }
 
-    public void showEditForm(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
+    public void showEditForm(Optional<Integer> id, ModelMap map) {
 
-        if (id.isPresent()) {
-            Post post = postRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("post"));
-            PostViewDto postViewDto = getPostViewDto(post);
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(post.getUser().getId(), userFromSession.getId())
-                    || Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        Post post = getPostById(id);
+        PostViewDto postViewDto = getPostViewDto(post);
 
-            if (isAccess) {
-                map.put("showNew", true);
-                map.put("showEdit", false);
-                map.put("showDelete", true);
-
-                map.put("postView", postViewDto);
-                map.put("postForm", new PostFormDto());
-
-            } else {
-                LoggerFactory.getLogger(PostService.class).error("GET EDIT. No rights to edit the post.");
-                throw new CustomAccessDeniedException("No rights to edit the post.");
-            }
-        }
+        map.put("postView", postViewDto);
+        map.put("postForm", new PostFormDto());
     }
 
     public void create(CustomUserDetails userSess, PostFormDto postFormDto) {
@@ -152,39 +88,31 @@ public class PostService {
 
     public void update(CustomUserDetails userSess, PostFormDto newData, Optional<Integer> id) {
 
-        if (id.isPresent()) {
-            Post postById = postRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("post"));
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(postById.getUser().getId(), userFromSession.getId())
-                    || Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        Post postById = getPostById(id);
+        boolean isAccess = ControllerUtil.checkAuthor(postById.getUser(), userSess)
+                || ControllerUtil.checkAdmin(userSess);
 
-            if (isAccess) {
-                ConverterUtil.update(newData, postById);
-                postRepository.save(postById);
+        if (isAccess) {
+            ConverterUtil.update(newData, postById);
+            postRepository.save(postById);
 
-            } else {
-                throw new CustomAccessDeniedException("No rights to update the post.");
-            }
+        } else {
+            throw new CustomAccessDeniedException("No rights to update the post.");
         }
+
     }
 
     public void delete(CustomUserDetails userSess, Optional<Integer> id) {
 
-        if (id.isPresent()) {
+        Post postById = getPostById(id);
+        boolean isAccess = ControllerUtil.checkAuthor(postById.getUser(), userSess)
+                || ControllerUtil.checkAdmin(userSess);
 
-            Post postById = postRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("post"));
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(postById.getUser().getId(), userFromSession.getId())
-                    || Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        if (isAccess) {
+            postRepository.deleteById(id.get());
 
-            if (isAccess) {
-                postRepository.deleteById(id.get());
-
-            } else {
-                throw new CustomAccessDeniedException("No rights to delete the post.");
-            }
+        } else {
+            throw new CustomAccessDeniedException("No rights to delete the post.");
         }
     }
 
@@ -206,7 +134,8 @@ public class PostService {
                                 return 1;
                             else
                                 return -1;
-                        }})
+                        }
+                    })
                     .toList();
 
             if (userSess != null) {
@@ -229,7 +158,6 @@ public class PostService {
             map.put("nameByUser", byUser.getUsername());
         }
     }
-
 
     private PostViewDto getPostViewDto(Post post) {
 
@@ -272,6 +200,33 @@ public class PostService {
         s.append(minute);
 
         return s.toString(); // Format: dd.MM.yyyy   hh:mm
+    }
+
+    public Post getPostById(Optional<Integer> id) {
+
+        id.orElseThrow(() -> new IllegalArgumentException("ID of post is not present"));
+
+        return postRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("post"));
+
+    }
+
+    public void showEditFormWithNewData(Optional<Integer> id, PostFormDto postFormDto, ModelMap modelMap) {
+
+        Post post = getPostById(id);
+        PostViewDto postViewDto = (PostViewDto) ConverterUtil.updateAndReturn(post, new PostViewDto());
+        ConverterUtil.update(postFormDto, postViewDto);
+
+        modelMap.addAttribute("postView", postViewDto);
+        modelMap.addAttribute("postForm", new PostFormDto());
+    }
+
+    public void showNewFormWithNewData(CustomUserDetails userSess, PostFormDto postFormDto, ModelMap modelMap) {
+
+        PostViewDto postViewDto = (PostViewDto) ConverterUtil.updateAndReturn(postFormDto, new PostViewDto());
+        postViewDto.setAuthorOfPost(userSess.getUsername());
+        modelMap.addAttribute("postView", postViewDto);
+        modelMap.addAttribute("postForm", new PostFormDto());
     }
 
 }

@@ -34,7 +34,12 @@
         <div class="form-group">
             <label>Title:
                 <br>
-                <input class="form-control" type="text" name="title" value="${(postView.title)!''}"/>
+                <input class="form-control-sm ${(titleError??)?string('is-invalid', '')}" type="text" name="title" value="${(postView.title)!''}"/>
+                <#if titleError??>
+                    <div class="invalid-feedback">
+                        ${titleError}
+                    </div>
+                </#if>
             </label>
         </div>
         <br>
@@ -42,23 +47,29 @@
         <div class="form-group">
             <label>View Author:
                 <br>
-                <input class="form-control" type="text" name="authorOfPost" readonly value="${(postView.authorOfPost)!''}"/>
+                <input class="form-control-sm ${(authorError??)?string('is-invalid', '')}" type="text" name="authorOfPost" readonly value="${(postView.authorOfPost)!''}"/>
+                <#if authorError??>
+                    <div class="invalid-feedback">
+                        ${authorError}
+                    </div>
+                </#if>
             </label>
         </div>
         <br>
 
-<#--        <div class="form-group">-->
-<#--            <label>Date and time:-->
-<#--                <br>-->
-<#--                <input type="datetime-local" name="date" value="${(post.date)!}"/>-->
-<#--            </label>-->
-<#--        </div>-->
-<#--        <br>-->
-
         <div class="form-group">
-            <label>Text of post:
+            <label for="formControlTextarea">Text of post:
                 <br>
-                <textarea rows="10" cols="30" name="text">${(postView.text)!''}</textarea>
+                <textarea class="form-control-sm ${(textError??)?string('is-invalid', '')}"
+                          name="text"
+                          id="formControlTextarea"
+                          rows="10"
+                          cols="60">${postView.text!''}</textarea>
+                <#if textError??>
+                    <div class="invalid-feedback">
+                        ${textError}
+                    </div>
+                </#if>
             </label>
         </div>
         <br>

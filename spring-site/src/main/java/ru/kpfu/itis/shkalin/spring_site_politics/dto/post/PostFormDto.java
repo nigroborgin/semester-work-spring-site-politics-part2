@@ -13,11 +13,11 @@ import javax.validation.constraints.Size;
 public class PostFormDto {
 
     @NotBlank(message = "Title cannot be empty")
-    @Size(min = 2, max = 255, message = "Length of title should be from 2 to 255 characters")
+    @Size(max = 255, message = "Length of title should Not be more 255 characters")
     private String title;
 
     @NotBlank(message = "Text of post cannot be empty")
-    @Size(min = 2, max = 10000, message = "Length of post-text should be from 2 to 10000 characters")
+    @Size(max = 10000, message = "Length of post-text should Not be more 10000 characters")
     private String text;
 
 }

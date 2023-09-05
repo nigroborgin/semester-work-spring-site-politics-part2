@@ -38,10 +38,10 @@
                    name="title"
                    value="${bookView.title!''}"/>
             <#if titleError??>
-            <div class="invalid-feedback">
-                ${titleError}
-            </div>
-        </#if>
+                <div class="invalid-feedback">
+                    ${titleError}
+                </div>
+            </#if>
         </label>
     </div>
     <br>
@@ -54,23 +54,21 @@
                    name="author"
                    value="${bookView.author!''}"/>
             <#if authorError??>
-            <div class="invalid-feedback">
-                ${authorError}
-            </div>
-        </#if>
+                <div class="invalid-feedback">
+                    ${authorError}
+                </div>
+            </#if>
         </label>
     </div>
     <br>
 
     <div class="form-group">
         <label for="formControlTextarea">Description:
-            <textarea class="form-control ${(descriptionError??)?string('is-invalid', '')}"
+            <textarea class="form-control-sm ${(descriptionError??)?string('is-invalid', '')}"
                       name="description"
                       id="formControlTextarea"
                       rows="10"
-                      cols="60">
-                ${bookView.description!''}
-            </textarea>
+                      cols="60">${bookView.description!''}</textarea>
             <#if descriptionError??>
                 <div class="invalid-feedback">
                     ${descriptionError}
@@ -84,10 +82,10 @@
         <br>
         <input type="file" name="file" value="${bookView.fileUrl!''}"/>
         <#if fileError??>
-        <div class="invalid-feedback">
-            ${fileError}
-        </div>
-    </#if>
+            <div class="invalid-feedback">
+                ${fileError}
+            </div>
+        </#if>
     </label>
     <br><br>
 

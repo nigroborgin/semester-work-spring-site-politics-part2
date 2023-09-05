@@ -7,7 +7,6 @@ import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.user.UserFormLoginDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.user.UserFormRegisterDto;
@@ -18,7 +17,6 @@ import ru.kpfu.itis.shkalin.spring_site_politics.util.ControllerUtil;
 import ru.kpfu.itis.shkalin.spring_site_politics.util.ConverterUtil;
 
 import javax.validation.Valid;
-import java.util.Map;
 import java.util.Optional;
 
 @Controller
