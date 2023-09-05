@@ -86,18 +86,6 @@ public class BookService {
 
     }
 
-    public void showEditFormWithNewData(Optional<Integer> id, BookFormDto bookFormDto, ModelMap map) {
-        id.orElseThrow(() -> new IllegalArgumentException("ID of book is not present"));
-
-        Book book = bookRepository.findById(id.get())
-                .orElseThrow(() -> new NotFoundException("book"));
-        BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(book, new BookViewDto());
-        ConverterUtil.update(bookFormDto, bookViewDto);
-
-        map.put("bookView", bookViewDto);
-        map.put("bookEdit", new BookFormDto());
-    }
-
     public void create(BookFormDto bookFormDto, MultipartFile bookFile) throws IOException, DocumentException, FB2toPDFException {
 
         Book book = (Book) ConverterUtil.updateAndReturn(bookFormDto, new Book());
@@ -166,7 +154,7 @@ public class BookService {
         }
     }
 
-    private BookViewDto conversionBookToViewDto(Book book) {
+    public BookViewDto conversionBookToViewDto(Book book) {
         BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(book, new BookViewDto());
         bookViewDto.setFormatsOfBook(
                 book.getFormats().stream()
@@ -179,6 +167,18 @@ public class BookService {
         BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(bookFormDto, new BookViewDto());
         modelMap.addAttribute("bookView", bookViewDto);
         modelMap.addAttribute("bookEdit", new BookFormDto());
+    }
+
+    public void showEditFormWithNewData(Optional<Integer> id, BookFormDto bookFormDto, ModelMap map) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book is not present"));
+
+        Book book = bookRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book"));
+        BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(book, new BookViewDto());
+        ConverterUtil.update(bookFormDto, bookViewDto);
+
+        map.put("bookView", bookViewDto);
+        map.put("bookEdit", new BookFormDto());
     }
 
 }

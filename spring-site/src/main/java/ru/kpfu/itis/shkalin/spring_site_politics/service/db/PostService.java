@@ -211,6 +211,14 @@ public class PostService {
 
     }
 
+    public void showNewFormWithNewData(CustomUserDetails userSess, PostFormDto postFormDto, ModelMap modelMap) {
+
+        PostViewDto postViewDto = (PostViewDto) ConverterUtil.updateAndReturn(postFormDto, new PostViewDto());
+        postViewDto.setAuthorOfPost(userSess.getUsername());
+        modelMap.addAttribute("postView", postViewDto);
+        modelMap.addAttribute("postForm", new PostFormDto());
+    }
+
     public void showEditFormWithNewData(Optional<Integer> id, PostFormDto postFormDto, ModelMap modelMap) {
 
         Post post = getPostById(id);
@@ -220,13 +228,4 @@ public class PostService {
         modelMap.addAttribute("postView", postViewDto);
         modelMap.addAttribute("postForm", new PostFormDto());
     }
-
-    public void showNewFormWithNewData(CustomUserDetails userSess, PostFormDto postFormDto, ModelMap modelMap) {
-
-        PostViewDto postViewDto = (PostViewDto) ConverterUtil.updateAndReturn(postFormDto, new PostViewDto());
-        postViewDto.setAuthorOfPost(userSess.getUsername());
-        modelMap.addAttribute("postView", postViewDto);
-        modelMap.addAttribute("postForm", new PostFormDto());
-    }
-
 }

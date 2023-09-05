@@ -4,9 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.ModelMap;
+import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookViewDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.selections_book.SelectionBookFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.selections_book.SelectionBookViewAllDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.Book;
+import ru.kpfu.itis.shkalin.spring_site_politics.model.BookToFormatBook;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.SelectionBook;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.User;
 import ru.kpfu.itis.shkalin.spring_site_politics.security.CustomUserDetails;
@@ -21,6 +23,7 @@ import ru.kpfu.itis.shkalin.spring_site_politics.repository.BookRepository;
 import ru.kpfu.itis.shkalin.spring_site_politics.repository.SelectionBookRepository;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,140 +41,98 @@ public class SelectionBookService {
     BookRepository bookRepository;
 
     @Autowired
+    BookService bookService;
+
+    @Autowired
     StorageService storageService;
 
-    public void showAll(CustomUserDetails userSess, ModelMap map) {
+    public void showAll(ModelMap map) {
 
         List<SelectionBookViewAllDto> bookSelectionsList = selectionRepository.findAllWithoutUser().stream()
                 .map(bs -> (SelectionBookViewAllDto) ConverterUtil.updateAndReturn(bs, new SelectionBookViewAllDto()))
                 .toList();
 
-        boolean showNew = false;
-        boolean showEdit = false;
-        boolean showDelete = false;
-
-        if (userSess != null) {
-            boolean isAccess = Objects.equals(userSess.getUser().getRole().getName(), "ROLE_ADMIN");
-
-            if (isAccess) {
-                showNew = true;
-                showEdit = true;
-                showDelete = true;
-            }
-        }
-
-        map.put("showNew", showNew);
-        map.put("showEdit", showEdit);
-        map.put("showDelete", showDelete);
-
         map.put("bookSelections", bookSelectionsList);
     }
 
-    public void showOne(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
+    public void showOne(Optional<Integer> id, ModelMap map) {
 
-        if (id.isPresent()) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-            SelectionBook selectionBook = selectionRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("book-selection"));
-            SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto) ConverterUtil.updateAndReturn(selectionBook, new SelectionBookViewOneDto());
-            List<BookViewForSelectionDto> bookViewDtoList = selectionBook.getBooks().stream()
-                    .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
-                    .toList();
-            if (bookViewDtoList.size() > 0) {
-                selectionBookViewOneDto.setBookList(bookViewDtoList);
-            } else {
-                selectionBookViewOneDto.setBookList(null);
-            }
+        SelectionBook selectionBook = selectionRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book-selection"));
+        selectionBook.setBooks(
+                selectionBook.getBooks().stream().distinct().toList()
+        );
 
+        SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto)
+                ConverterUtil.updateAndReturn(selectionBook, new SelectionBookViewOneDto());
 
-            boolean showNew = false;
-            boolean showEdit = false;
-            boolean showDelete = false;
-
-            if (userSess != null) {
-                User userFromSession = userSess.getUser();
-                boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-                if (isAccess) {
-                    showNew = true;
-                    showEdit = true;
-                    showDelete = true;
-                }
-            }
-
-            map.put("showNew", showNew);
-            map.put("showEdit", showEdit);
-            map.put("showDelete", showDelete);
-
-            map.put("selectionBookView", selectionBookViewOneDto);
-
+        List<BookViewForSelectionDto> bookViewDtoList = new ArrayList<>();
+        for (Book book : selectionBook.getBooks()) {
+            BookViewDto bookViewDto = bookService.conversionBookToViewDto(book);
+            BookViewForSelectionDto bookViewForSelectionDto = (BookViewForSelectionDto)
+                    ConverterUtil.updateAndReturn(bookViewDto, new BookViewForSelectionDto());
+            bookViewForSelectionDto.setIsSelected(true);
+            bookViewDtoList.add(bookViewForSelectionDto);
         }
-    }
 
-    public void showNewForm(CustomUserDetails userSess, ModelMap map) {
 
-        User userFromSession = userSess.getUser();
-        boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-        if (isAccess) {
-            map.put("showNew", false);
-            map.put("showEdit", false);
-            map.put("showDelete", false);
-
-            SelectionBookViewOneDto selectionBookViewOneDto = new SelectionBookViewOneDto();
-            List<BookViewForSelectionDto> bookViewDtoList = bookRepository.findAll().stream()
-                    .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
-                    .toList();
+//        List<BookViewForSelectionDto> bookViewDtoList = selectionBook.getBooks().stream()
+//                .map(book -> {
+//                    BookViewDto bookViewDto = bookService.conversionBookToViewDto(book);
+//                    BookViewForSelectionDto bookViewForSelectionDto = (BookViewForSelectionDto)
+//                            ConverterUtil.updateAndReturn(bookViewDto, new BookViewForSelectionDto());
+//                    bookViewForSelectionDto.setIsSelected(true);
+//                    return bookViewForSelectionDto;})
+//                .toList();
+        if (!bookViewDtoList.isEmpty()) {
             selectionBookViewOneDto.setBookList(bookViewDtoList);
-
-            map.put("selectionBookView", selectionBookViewOneDto);
-            map.put("selectionBookEdit", new SelectionBookFormDto());
-
         } else {
-            throw new CustomAccessDeniedException("No rights to create the book-selection.");
+            selectionBookViewOneDto.setBookList(null);
         }
+
+        map.addAttribute("selectionBookView", selectionBookViewOneDto);
     }
 
-    public void showEditForm(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
+    public void showNewForm(ModelMap map) {
 
-        if (id.isPresent()) {
+        SelectionBookViewOneDto selectionBookViewOneDto = new SelectionBookViewOneDto();
+        List<BookViewForSelectionDto> bookViewDtoList = bookRepository.findAll().stream()
+                .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
+                .toList();
+        selectionBookViewOneDto.setBookList(bookViewDtoList);
 
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        map.put("selectionBookView", selectionBookViewOneDto);
+        map.put("selectionBookEdit", new SelectionBookFormDto());
+    }
 
-            if (isAccess) {
+    public void showEditForm(Optional<Integer> id, ModelMap map) {
 
-                SelectionBook selectionBook = selectionRepository.findById(id.get())
-                        .orElseThrow(() -> new NotFoundException("book-selection"));
-                SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto)
-                        ConverterUtil.updateAndReturn(selectionBook, new SelectionBookViewOneDto());
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-                List<BookViewForSelectionDto> allBooks = bookRepository.findAll().stream()
-                        .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
-                        .toList();
+        SelectionBook selectionBook = selectionRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book-selection"));
+        SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto)
+                ConverterUtil.updateAndReturn(selectionBook, new SelectionBookViewOneDto());
 
-                for (BookViewForSelectionDto bookDto : allBooks) {
-                    for (Book bookFromSelection : selectionBook.getBooks()) {
+        List<BookViewForSelectionDto> allBooks = bookRepository.findAll().stream()
+                .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
+                .toList();
 
-                        if (bookDto.getId().equals(bookFromSelection.getId())) {
-                            bookDto.setIsSelected(true);
-                        }
-                    }
+        for (BookViewForSelectionDto bookDto : allBooks) {
+            for (Book bookFromSelection : selectionBook.getBooks()) {
+                if (bookDto.getId().equals(bookFromSelection.getId())) {
+                    bookDto.setIsSelected(true);
                 }
-
-                selectionBookViewOneDto.setBookList(allBooks);
-
-                map.put("showNew", true);
-                map.put("showEdit", true);
-                map.put("showDelete", true);
-
-                map.put("selectionBookView", selectionBookViewOneDto);
-                map.put("selectionBookEdit", new SelectionBookFormDto());
-
-            } else {
-                throw new CustomAccessDeniedException("No rights to edit the book-selection.");
             }
         }
+
+        selectionBookViewOneDto.setBookList(allBooks);
+
+        map.put("selectionBookView", selectionBookViewOneDto);
+        map.put("selectionBookEdit", new SelectionBookFormDto());
+
     }
 
     public void create(CustomUserDetails userSess, SelectionBookFormDto selectionBookFormDto) {
@@ -198,139 +159,108 @@ public class SelectionBookService {
 
     public void update(CustomUserDetails userSess, SelectionBookFormDto newData, Optional<Integer> id) {
 
-        if (id.isPresent()) {
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-            if (isAccess) {
-                SelectionBook selectionBookById = selectionRepository.findById(id.get())
-                        .orElseThrow(() -> new NotFoundException("selection-book"));
-                selectionBookById.getBooks().clear();
+        User userFromSession = userSess.getUser();
+        boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
 
-                ConverterUtil.update(newData, selectionBookById);
-                List<Book> booksByIds = bookRepository.findAllById(newData.getBookIdList());
-                selectionBookById.setBooks(booksByIds);
+        if (isAccess) {
+            SelectionBook selectionBookById = selectionRepository.findById(id.get())
+                    .orElseThrow(() -> new NotFoundException("selection-book"));
+            selectionBookById.getBooks().clear();
 
-                selectionRepository.save(selectionBookById);
+            ConverterUtil.update(newData, selectionBookById);
+            List<Book> booksByIds = bookRepository.findAllById(newData.getBookIdList());
+            selectionBookById.setBooks(booksByIds);
 
-            } else {
-                throw new CustomAccessDeniedException("No rights to update the post.");
-            }
+            selectionRepository.save(selectionBookById);
+
+        } else {
+            throw new CustomAccessDeniedException("No rights to update the post.");
         }
-
     }
 
     public void delete(CustomUserDetails userSess, Optional<Integer> id) {
 
-        if (id.isPresent()) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-            User userFromSession = userSess.getUser();
-            boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
+        User userFromSession = userSess.getUser();
+        boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
 
-            if (isAccess) {
-                selectionRepository.deleteById(id.get());
+        if (isAccess) {
+            selectionRepository.deleteById(id.get());
 
-            } else {
-                throw new CustomAccessDeniedException("No rights to delete the selection-book.");
-            }
+        } else {
+            throw new CustomAccessDeniedException("No rights to delete the selection-book.");
         }
     }
 
-    public String download(Optional<Integer> id, ModelMap map) {
+    public String download(Optional<Integer> id) {
 
-        String archiveName = null;
-        if (id.isPresent()) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-            Optional<SelectionBook> selectionById = selectionRepository.findById(id.get());
-            List<Book> books = selectionById.get().getBooks();
-            List<String> bookFilesystemNames = books.stream()
-                    .map(b -> PathRefactorerUtil.getFileNameByUrl("/",
-                            /*todo: сделать выбор формата при скачивании подборки*/
-                            b.getFormats().get(0).getUrl()))
-                    .toList();
+        Optional<SelectionBook> selectionById = selectionRepository.findById(id.get());
+        List<Book> books = selectionById.get().getBooks();
+        List<String> bookFilesystemNames = books.stream()
+                .map(b -> PathRefactorerUtil.getFileNameByUrl("/",
+                        /*todo: сделать выбор формата при скачивании подборки*/
+                        b.getFormats().get(0).getUrl()))
+                .toList();
 
-            try {
-                archiveName = storageService.createArchive(bookFilesystemNames);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        String archiveName;
+        try {
+            archiveName = storageService.createArchive(bookFilesystemNames);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
         return archiveName;
     }
 
     public void showAllMy(CustomUserDetails userSess, ModelMap map) {
 
-
-        boolean showNew = false;
-        boolean showEdit = false;
-        boolean showDelete = false;
         List<SelectionBookViewAllDto> bookSelectionsList = null;
         if (userSess != null) {
-            User userFromSession = userSess.getUser();
-            bookSelectionsList = selectionRepository.findAllByUser(userFromSession.getId())
-                    .stream()
+            bookSelectionsList = selectionRepository.findAllByUser(userSess.getUser().getId()).stream()
                     .map(bs -> (SelectionBookViewAllDto) ConverterUtil.updateAndReturn(bs, new SelectionBookViewAllDto()))
                     .toList();
-            showNew = true;
-            showEdit = true;
-            showDelete = true;
         }
 
-        map.put("showNew", showNew);
-        map.put("showEdit", showEdit);
-        map.put("showDelete", showDelete);
-        map.put("isMy", true);
-
-        map.put("bookSelections", bookSelectionsList);
+        map.addAttribute("bookSelections", bookSelectionsList);
     }
 
     public void showOneMy(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
 
-        if (id.isPresent()) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-            SelectionBook selectionBook = selectionRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("book-selection"));
-            if (!selectionBook.getUser().equals(userSess.getUser())) {
-                throw new NotFoundException("book-selection");
-            }
-
-            SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto) ConverterUtil.updateAndReturn(selectionBook, new SelectionBookViewOneDto());
-            List<BookViewForSelectionDto> bookViewDtoList = selectionBook.getBooks().stream()
-                    .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
-                    .toList();
-            if (bookViewDtoList.size() > 0) {
-                selectionBookViewOneDto.setBookList(bookViewDtoList);
-            } else {
-                selectionBookViewOneDto.setBookList(null);
-            }
-
-
-            boolean showNew = false;
-            boolean showEdit = false;
-            boolean showDelete = false;
-
-            if (userSess != null) {
-                User userFromSession = userSess.getUser();
-                boolean isAccess = Objects.equals(userFromSession.getRole().getName(), "ROLE_ADMIN");
-
-                if (isAccess) {
-                    showNew = true;
-                    showEdit = true;
-                    showDelete = true;
-                }
-            }
-
-            map.put("showNew", showNew);
-            map.put("showEdit", showEdit);
-            map.put("showDelete", showDelete);
-            map.put("isMy", true);
-
-            map.put("selectionBookView", selectionBookViewOneDto);
-
+        SelectionBook selectionBook = selectionRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book-selection"));
+        if (!selectionBook.getUser().equals(userSess.getUser())) {
+            throw new NotFoundException("book-selection");
         }
+
+        SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto)
+                ConverterUtil.updateAndReturn(selectionBook, new SelectionBookViewOneDto());
+
+        List<BookViewForSelectionDto> bookViewDtoList = selectionBook.getBooks().stream()
+                .map(book -> {
+                    BookViewDto bookViewDto = bookService.conversionBookToViewDto(book);
+                    BookViewForSelectionDto bookViewForSelectionDto = (BookViewForSelectionDto)
+                            ConverterUtil.updateAndReturn(bookViewDto, new BookViewForSelectionDto());
+                    bookViewForSelectionDto.setIsSelected(true);
+                    return bookViewForSelectionDto;})
+                .toList();
+
+        if (!bookViewDtoList.isEmpty()) {
+            selectionBookViewOneDto.setBookList(bookViewDtoList);
+        } else {
+            selectionBookViewOneDto.setBookList(null);
+        }
+
+        map.addAttribute("selectionBookView", selectionBookViewOneDto);
     }
 
-    public void showNewFormMy(CustomUserDetails userSess, ModelMap map) {
+    public void showNewFormMy(ModelMap map) {
 
         SelectionBookViewOneDto selectionBookViewOneDto = new SelectionBookViewOneDto();
         List<BookViewForSelectionDto> bookViewDtoList = bookRepository.findAll().stream()
@@ -338,61 +268,49 @@ public class SelectionBookService {
                 .toList();
         selectionBookViewOneDto.setBookList(bookViewDtoList);
 
-        map.put("showNew", false);
-        map.put("showEdit", false);
-        map.put("showDelete", false);
-
-        map.put("isMy", true);
         map.put("selectionBookView", selectionBookViewOneDto);
         map.put("selectionBookEdit", new SelectionBookFormDto());
-
     }
 
     public void showEditFormMy(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
 
-        if (id.isPresent()) {
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-            User userFromSession = userSess.getUser();
-            SelectionBook selectionBook = selectionRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("book-selection"));
+        User userFromSession = userSess.getUser();
+        SelectionBook selectionBook = selectionRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book-selection"));
 
-            User userFromSelection = selectionBook.getUser();
-            boolean isAccess = false;
-            if (userFromSelection != null) {
-                isAccess = Objects.equals(userFromSession.getId(), userFromSelection.getId());
-            }
+        User userFromSelection = selectionBook.getUser();
+        boolean isAccess = false;
+        if (userFromSelection != null) {
+            isAccess = Objects.equals(userFromSession.getId(), userFromSelection.getId());
+        }
 
-            if (isAccess) {
+        if (isAccess) {
 
-                SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto)
-                        ConverterUtil.updateAndReturn(selectionBook, new SelectionBookViewOneDto());
+            SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto)
+                    ConverterUtil.updateAndReturn(selectionBook, new SelectionBookViewOneDto());
 
-                List<BookViewForSelectionDto> allBooks = bookRepository.findAll().stream()
-                        .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
-                        .toList();
+            List<BookViewForSelectionDto> allBooks = bookRepository.findAll().stream()
+                    .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
+                    .toList();
 
-                for (BookViewForSelectionDto bookDto : allBooks) {
-                    for (Book bookFromSelection : selectionBook.getBooks()) {
+            for (BookViewForSelectionDto bookDto : allBooks) {
+                for (Book bookFromSelection : selectionBook.getBooks()) {
 
-                        if (bookDto.getId().equals(bookFromSelection.getId())) {
-                            bookDto.setIsSelected(true);
-                        }
+                    if (bookDto.getId().equals(bookFromSelection.getId())) {
+                        bookDto.setIsSelected(true);
                     }
                 }
-
-                selectionBookViewOneDto.setBookList(allBooks);
-
-                map.put("showNew", true);
-                map.put("showEdit", true);
-                map.put("showDelete", true);
-
-                map.put("isMy", true);
-                map.put("selectionBookView", selectionBookViewOneDto);
-                map.put("selectionBookEdit", new SelectionBookFormDto());
-
-            } else {
-                throw new CustomAccessDeniedException("No rights to edit the book-selection.");
             }
+
+            selectionBookViewOneDto.setBookList(allBooks);
+
+            map.put("selectionBookView", selectionBookViewOneDto);
+            map.put("selectionBookEdit", new SelectionBookFormDto());
+
+        } else {
+            throw new CustomAccessDeniedException("No rights to edit the book-selection.");
         }
     }
 
@@ -410,64 +328,68 @@ public class SelectionBookService {
                         newSelectionBook.addBook(bookForSelection);
                     });
         }
-
         newSelectionBook.setUser(userFromSession);
-
         selectionRepository.save(newSelectionBook);
-
     }
 
-    public void updateMy(CustomUserDetails userSess, SelectionBookFormDto newData, Optional<Integer> id) {
-        if (id.isPresent()) {
-            User userFromSession = userSess.getUser();
-            SelectionBook selectionBookById = selectionRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("book-selection"));
+    public void updateMy(CustomUserDetails userSess, SelectionBookFormDto selectionBookFormDto, Optional<Integer> id) {
 
-            User userFromSelection = selectionBookById.getUser();
-            boolean isAccess = false;
-            if (userFromSelection != null) {
-                isAccess = Objects.equals(userFromSession.getId(), userFromSelection.getId());
-            }
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-            if (isAccess) {
+        User userFromSession = userSess.getUser();
+        SelectionBook selectionBookById = selectionRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book-selection"));
 
-                selectionBookById.getBooks().clear();
+        User userFromSelection = selectionBookById.getUser();
+        boolean isAccess = false;
+        if (userFromSelection != null) {
+            isAccess = Objects.equals(userFromSession.getId(), userFromSelection.getId());
+        }
 
-                ConverterUtil.update(newData, selectionBookById);
-                List<Book> booksByIds = bookRepository.findAllById(newData.getBookIdList());
+        if (isAccess) {
+
+            selectionBookById.getBooks().clear();
+
+            ConverterUtil.update(selectionBookFormDto, selectionBookById);
+            List<Integer> bookIdList = selectionBookFormDto.getBookIdList();
+            if (bookIdList != null && !bookIdList.isEmpty()) {
+                List<Book> booksByIds = bookRepository.findAllById(bookIdList);
                 selectionBookById.setBooks(booksByIds);
-
-                selectionRepository.save(selectionBookById);
-
-            } else {
-                throw new CustomAccessDeniedException("No rights to update the post.");
             }
+
+
+            selectionRepository.save(selectionBookById);
+
+        } else {
+            throw new CustomAccessDeniedException("No rights to update the post.");
         }
     }
 
     public void deleteMy(CustomUserDetails userSess, Optional<Integer> id) {
-        if (id.isPresent()) {
 
-            User userFromSession = userSess.getUser();
-            SelectionBook selectionBookById = selectionRepository.findById(id.get())
-                    .orElseThrow(() -> new NotFoundException("book-selection"));
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
-            User userFromSelection = selectionBookById.getUser();
-            boolean isAccess = false;
-            if (userFromSelection != null) {
-                isAccess = Objects.equals(userFromSession.getId(), userFromSelection.getId());
-            }
+        User userFromSession = userSess.getUser();
+        SelectionBook selectionBookById = selectionRepository.findById(id.get())
+                .orElseThrow(() -> new NotFoundException("book-selection"));
 
-            if (isAccess) {
-                selectionRepository.deleteById(id.get());
+        User userFromSelection = selectionBookById.getUser();
+        boolean isAccess = false;
+        if (userFromSelection != null) {
+            isAccess = Objects.equals(userFromSession.getId(), userFromSelection.getId());
+        }
 
-            } else {
-                throw new CustomAccessDeniedException("No rights to delete the selection-book.");
-            }
+        if (isAccess) {
+            selectionRepository.deleteById(id.get());
+
+        } else {
+            throw new CustomAccessDeniedException("No rights to delete the selection-book.");
         }
     }
 
-    public String downloadMy(CustomUserDetails userSess, Optional<Integer> id, ModelMap map) {
+    public String downloadMy(CustomUserDetails userSess, Optional<Integer> id) {
+
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
 
         String result = null;
         if (userSess != null) {
@@ -483,10 +405,49 @@ public class SelectionBookService {
             }
 
             if (isAccess) {
-                result = download(id, map);
+                result = download(id);
             }
         }
         return result;
     }
+
+    public void showNewFormWithNewData(SelectionBookFormDto selectionBookFormDto, ModelMap modelMap) {
+        SelectionBookViewOneDto selectionBookViewOneDto = getDtoWithNewData(selectionBookFormDto);
+        modelMap.addAttribute("selectionBookView", selectionBookViewOneDto);
+        modelMap.addAttribute("selectionBookEdit", new SelectionBookFormDto());
+    }
+
+    private SelectionBookViewOneDto getDtoWithNewData(SelectionBookFormDto selectionBookFormDto) {
+        SelectionBookViewOneDto selectionBookViewOneDto = (SelectionBookViewOneDto)
+                ConverterUtil.updateAndReturn(selectionBookFormDto, new SelectionBookViewOneDto());
+        List<BookViewForSelectionDto> allBooks = bookRepository.findAll().stream()
+                .map(b -> (BookViewForSelectionDto) ConverterUtil.updateAndReturn(b, new BookViewForSelectionDto()))
+                .toList();
+
+        List<Integer> bookIdList = selectionBookFormDto.getBookIdList();
+        if (bookIdList != null && !bookIdList.isEmpty()) {
+            for (BookViewForSelectionDto bookDto : allBooks) {
+                for (Integer idBook : bookIdList) {
+                    if (bookDto.getId().equals(idBook)) {
+                        bookDto.setIsSelected(true);
+                    }
+                }
+            }
+        }
+        selectionBookViewOneDto.setBookList(allBooks);
+        return selectionBookViewOneDto;
+    }
+
+    public void showEditFormWithNewData(Optional<Integer> id, SelectionBookFormDto selectionBookFormDto, ModelMap modelMap) {
+
+        id.orElseThrow(() -> new IllegalArgumentException("ID of book-selection is not present"));
+
+        SelectionBookViewOneDto selectionBookViewOneDto = getDtoWithNewData(selectionBookFormDto);
+        selectionBookViewOneDto.setId(id.get());
+        modelMap.addAttribute("selectionBookView", selectionBookViewOneDto);
+        modelMap.addAttribute("selectionBookEdit", new SelectionBookFormDto());
+
+    }
+
 
 }

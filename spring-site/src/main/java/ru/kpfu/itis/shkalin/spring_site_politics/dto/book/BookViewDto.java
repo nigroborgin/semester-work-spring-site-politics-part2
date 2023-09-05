@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookViewDto {
+
     private Integer id;
     private String title;
     private String description;

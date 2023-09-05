@@ -35,7 +35,15 @@
         <div class="form-group">
             <label>Title of book-selection:
                 <br>
-                <input class="form-control-sm" type="text" name="title" value="${selectionBookView.title!''}"/>
+                <input class="form-control-sm ${(titleError??)?string('is-invalid', '')}"
+                       type="text"
+                       name="title"
+                       value="${selectionBookView.title!''}"/>
+                <#if titleError??>
+                    <div class="invalid-feedback">
+                        ${titleError}
+                    </div>
+                </#if>
             </label>
         </div>
         <br>
