@@ -95,7 +95,7 @@
                         </#if>
                         <td>
                             <center>
-                                <#if book.formatsOfBook??>
+                                <#if book.formatsOfBook?? && book.formatsOfBook?size gt 0>
                                     <div class="btn-group" role="group" aria-label="Fifth group">
                                         <button type="button" class="btn btn-outline-dark">
                                             <img width="24" src="/static/picture/download-file.png">

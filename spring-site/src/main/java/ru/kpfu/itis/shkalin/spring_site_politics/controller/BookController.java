@@ -87,7 +87,7 @@ public class BookController {
             return "redirect:/books";
         } else {
             ControllerUtil.disableButtons(modelMap);
-            modelMap.addAttribute("bookView", bookFormDto);
+            bookService.showNewFormWithNewData(bookFormDto, modelMap);
             return showForm();
         }
     }

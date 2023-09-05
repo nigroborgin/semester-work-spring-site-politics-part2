@@ -11,6 +11,7 @@ import org.trivee.fb2pdf.FB2toPDFException;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.BookViewDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.dto.book.FormatBookDto;
+import ru.kpfu.itis.shkalin.spring_site_politics.dto.post.PostFormDto;
 import ru.kpfu.itis.shkalin.spring_site_politics.exception.NotFoundException;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.Book;
 import ru.kpfu.itis.shkalin.spring_site_politics.model.BookToFormatBook;
@@ -102,7 +103,10 @@ public class BookService {
         Book book = (Book) ConverterUtil.updateAndReturn(bookFormDto, new Book());
         uploadBookFile(bookFile, book);
         Book savedBook = bookRepository.save(book);
-        bookToFormatBookRepository.saveAll(savedBook.getFormats());
+        List<BookToFormatBook> bookFormats = savedBook.getFormats();
+        if (bookFormats != null && !bookFormats.isEmpty()) {
+            bookToFormatBookRepository.saveAll(bookFormats);
+        }
     }
 
     public void update(BookFormDto bookFormDto, MultipartFile bookFile, Optional<Integer> id)
@@ -169,6 +173,12 @@ public class BookService {
                         .map(f -> new FormatBookDto(f.getFormat().getName(), f.getUrl()))
                         .toList());
         return bookViewDto;
+    }
+
+    public void showNewFormWithNewData(BookFormDto bookFormDto, ModelMap modelMap) {
+        BookViewDto bookViewDto = (BookViewDto) ConverterUtil.updateAndReturn(bookFormDto, new BookViewDto());
+        modelMap.addAttribute("bookView", bookViewDto);
+        modelMap.addAttribute("bookEdit", new BookFormDto());
     }
 
 }
