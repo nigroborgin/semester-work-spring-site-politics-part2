@@ -50,7 +50,7 @@
                 </li>
             </ul>
             <#if auth>
-                <div class="navbar-text"><strong>USER: ${user.username}</strong></div>
+                <div class="navbar-text"><strong>USER: ${user.user.username}</strong></div>
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
                     <form method="post" action="/logout">

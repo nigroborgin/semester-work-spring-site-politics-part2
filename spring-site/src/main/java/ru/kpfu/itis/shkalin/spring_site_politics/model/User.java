@@ -18,6 +18,10 @@ public class User {
     @Column(name = "id")
     private Integer id;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "third_party_auth_id")
+    private AuthThirdParty authThirdParty;
+
     @ManyToOne(cascade = CascadeType.REFRESH)
     @JoinColumn(name = "role_id")
     private Role role;
@@ -34,14 +38,4 @@ public class User {
     @Column(name = "picture_url")
     private String pictureUrl;
 
-//    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
-//    private List<Post> posts;
-//
-//    public void addPost(Post post) {
-//        if (posts == null) {
-//            posts = new ArrayList<>();
-//        }
-//        posts.add(post);
-//        post.setUser(this);
-//    }
 }

@@ -61,7 +61,7 @@ public class PostService {
     public void showNewForm(CustomUserDetails userSess, ModelMap map) {
 
         PostViewDto postViewDto = new PostViewDto();
-        postViewDto.setAuthorOfPost(userSess.getUsername());
+        postViewDto.setAuthorOfPost(userSess.getUser().getUsername());
 
         map.put("postView", postViewDto);
         map.put("postForm", new PostFormDto());
@@ -80,7 +80,7 @@ public class PostService {
 
         Post newPost = (Post) ConverterUtil.updateAndReturn(postFormDto, new Post());
         newPost.setUser(userSess.getUser());
-        newPost.setAuthorOfPost(userSess.getUsername());
+        newPost.setAuthorOfPost(userSess.getUser().getUsername());
         newPost.setDate(LocalDateTime.now());
 
         postRepository.save(newPost);
@@ -214,7 +214,7 @@ public class PostService {
     public void showNewFormWithNewData(CustomUserDetails userSess, PostFormDto postFormDto, ModelMap modelMap) {
 
         PostViewDto postViewDto = (PostViewDto) ConverterUtil.updateAndReturn(postFormDto, new PostViewDto());
-        postViewDto.setAuthorOfPost(userSess.getUsername());
+        postViewDto.setAuthorOfPost(userSess.getUser().getUsername());
         modelMap.addAttribute("postView", postViewDto);
         modelMap.addAttribute("postForm", new PostFormDto());
     }
