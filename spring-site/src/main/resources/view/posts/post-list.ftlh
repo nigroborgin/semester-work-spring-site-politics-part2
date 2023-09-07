@@ -66,9 +66,10 @@
                                  <#if showDelete>
                                      &nbsp;
                                      <form method="post" action="/posts/${post.id?string.c}/delete">
-                                        <button class="btn btn-outline-danger" type="submit">
-                                            Delete
-                                        </button>
+                                         <input type="hidden" name="_csrf" value="${_csrf.token}">
+                                         <button class="btn btn-outline-danger" type="submit">
+                                             Delete
+                                         </button>
                                      </form>
                                  </#if>
                             </div>

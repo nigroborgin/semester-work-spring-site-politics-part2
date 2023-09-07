@@ -21,6 +21,7 @@
 <#if showDelete>
 <div class="btn-group position-absolute start-50 translate-middle-x" role="group" aria-label="Second group">
     <form method="post" action="/books/${bookView.id?string.c!''}/delete">
+        <input type="hidden" name="_csrf" value="${_csrf.token}">
         <button type="submit" class="btn btn-outline-danger">Delete</button>
     </form>
 </div>
@@ -89,6 +90,7 @@
     </label>
     <br><br>
 
+    <input type="hidden" name="_csrf" value="${_csrf.token}">
     <button type="submit" class="btn btn-primary">Save</button>
 </form>
 </#macro>

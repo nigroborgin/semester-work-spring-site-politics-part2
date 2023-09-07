@@ -16,8 +16,8 @@ public class SecurityConfig {
     UserDetailsService userDetailsService;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
             .authorizeRequests()
                 .antMatchers("/books/new", "/books/*/edit", "/books/*/delete").hasRole("ADMIN")
                 .antMatchers("/*/new", "/*/*/edit", "/*/*/delete").hasAnyRole("ADMIN", "USER")
@@ -49,11 +49,8 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/main")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-        .and()
-            .csrf()
-                .disable();
-        return http.build();
+                .deleteCookies("JSESSIONID");
+        return httpSecurity.build();
     }
 
 //    @Bean

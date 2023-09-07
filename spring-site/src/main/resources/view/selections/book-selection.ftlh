@@ -37,6 +37,7 @@
                 <#if showDelete>
                     <div class="btn-group" role="group" aria-label="Third group">
                         <form method="post" action="/selections-books<#if isMy??>/my</#if>/${selectionBookView.id?string.c}/delete">
+                            <input type="hidden" name="_csrf" value="${_csrf.token}">
                             <button class="btn btn-outline-danger" type="submit">
                                 Delete
                             </button>

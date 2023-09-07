@@ -53,7 +53,12 @@
                 <div class="navbar-text"><strong>USER: ${user.username}</strong></div>
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                    <form method="post" action="/logout">
+                        <input type="hidden" name="_csrf" value="${_csrf.token}">
+                        <li class="nav-item">
+                            <button type="submit" class="nav-link">Logout</button>
+                        </li>
+                    </form>
                 </ul>
             <#else>
                 <ul class="navbar-nav">

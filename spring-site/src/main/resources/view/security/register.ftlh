@@ -78,6 +78,7 @@
         </div>
         <br>
 
+        <input type="hidden" name="_csrf" value="${_csrf.token}">
         <button type="submit" class="btn btn-primary">Register</button>
     </form>
 

@@ -85,6 +85,7 @@
                                 <center>
                                     <div class="btn-group" role="group" aria-label="Fourth group">
                                         <form method="post" action="/books/${book.id?string.c}/delete">
+                                            <input type="hidden" name="_csrf" value="${_csrf.token}">
                                             <button class="btn btn-outline-danger btn-sm" type="submit">
                                                 Delete
                                             </button>

@@ -64,6 +64,7 @@
                 <br><br>
             </#if>
 
+            <input type="hidden" name="_csrf" value="${_csrf.token}">
             <button type="submit" class="btn btn-primary position-absolute start-50 translate-middle-x">Save</button>
         </form>
 

@@ -36,6 +36,7 @@
                 <#if showDelete>
                     <div class="btn-group" role="group" aria-label="Third group">
                         <form method="post" action="/posts/${postView.id?string.c}/delete">
+                            <input type="hidden" name="_csrf" value="${_csrf.token}">
                             <button type="submit" class="btn btn-outline-danger">Delete</button>
                         </form>
                     </div>
